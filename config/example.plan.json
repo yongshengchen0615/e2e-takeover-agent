@@ -1,0 +1,9 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "steps": [
+    { "name": "開啟首頁", "action": "goto", "path": "/" },
+    { "name": "確認首頁可見", "action": "assertVisible", "selector": "body" },
+    { "name": "人工登入", "action": "pauseForLogin" },
+    { "name": "確認登入後主畫面", "action": "assertVisible", "selector": "[data-testid='dashboard']" }
+  ]
+}
