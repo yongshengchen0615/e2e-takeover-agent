@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>E2E Takeover Agent</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><div><strong>E2E Takeover Agent</strong><small>LIVE TEST • HUMAN HANDOFF</small></div><div id="status" class="pill">尚未開始</div></header>
+  <main>
+    <section class="workspace">
+      <div class="toolbar"><h2>即時測試畫面</h2><span>本機 Chromium 可直接操作</span></div>
+      <div class="viewer"><img id="preview" alt="即時測試畫面"><div id="overlay" class="overlay">尚未開始測試</div></div>
+      <div id="notice" class="notice">登入、OTP 或第三方驗證時，請直接操作開啟的 Chromium 視窗；面板在人工接管期間不擷取畫面。</div>
+      <div class="buttons">
+        <button id="takeover" class="secondary" disabled>✋ 交還控制權</button>
+        <button id="resume" disabled>▶ 登入完成，繼續</button>
+        <button id="stop" class="danger" disabled>■ 結束</button>
+      </div>
+    </section>
+    <aside>
+      <h2>測試設定</h2>
+      <label for="base">受測網站（預設只允許 localhost）</label>
+      <input id="base" type="url" value="http://localhost:3000" spellcheck="false">
+      <label for="steps">步驟 JSON（可修改）</label>
+      <textarea id="steps" spellcheck="false">[
+  { "name": "開啟首頁", "action": "goto", "path": "/" },
+  { "name": "確認首頁", "action": "assertVisible", "selector": "body" }
+]</textarea>
+      <button id="start" class="primary">開始測試</button>
+      <p class="hint">支援 goto、click、fill、assertVisible、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
+      <h2>執行紀錄</h2>
+      <ol id="events" class="events"><li>等待啟動…</li></ol>
+      <p id="error" class="error" role="alert"></p>
+    </aside>
+  </main>
+  <div data-token="__CSRF_TOKEN__" id="config" hidden></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
