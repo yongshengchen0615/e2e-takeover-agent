@@ -27,9 +27,17 @@ $('loadPreset').onclick = async () => {
   if (!id) { message('請先選取管理端或用戶端測試方案'); return; }
   try {
     const response = await fetch('/api/profile?id='+encodeURIComponent(id), {cache:'no-store'});
+    const selectedDevice = $('device').value;
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '無法載入測試設定');
     const plan = data.plan;
+    plan.device = selectedDevice;
+    if (selectedDevice !== 'desktop') {
+      plan.steps.push({ name:'手機版無橫向溢出', action:'assertNoHorizontalOverflow' });
+      plan.acceptance.criteria.push({
+        id:'RWD-001',title:'手機畫面無橫向溢出',required:true,stepNames:['手機版無橫向溢出']
+      });
+    }
     const inputBase = $('base').value.trim();
     // Preserve a consciously chosen localhost/custom staging URL when loading a preset.
     if (inputBase && inputBase !== 'http://localhost:3000' && inputBase !== defaultSite) plan.baseUrl = inputBase;
@@ -57,6 +65,9 @@ $('start').onclick = async () => {
     const input = JSON.parse($('steps').value);
     const plan = Array.isArray(input) ? { baseUrl: $('base').value, steps: input } : input;
     if (!plan || typeof plan !== 'object' || Array.isArray(plan)) throw new Error('請填寫步驟陣列或完整測試計畫物件');
+    if (loadedProfileId && plan.profileId === loadedProfileId && plan.device !== $('device').value) {
+      throw new Error('畫面尺寸已修改，請按「載入選取的測試方案」重新產生相應 QA 檢查');
+    }
     if (loadedProfileId && plan.profileId === loadedProfileId) {
       plan.baseUrl = $('base').value.trim();
     }
@@ -76,6 +87,7 @@ async function refresh() {
     $('status').textContent = states[data.state] ?? data.state;
     $('start').disabled = ['starting','running','manual'].includes(data.state);
     $('loadPreset').disabled = ['starting','running','manual'].includes(data.state);
+    $('device').disabled = ['starting','running','manual'].includes(data.state);
     $('preset').disabled = ['starting','running','manual'].includes(data.state);
     $('takeover').disabled = data.state !== 'running';
     $('resume').disabled = data.state !== 'manual';
