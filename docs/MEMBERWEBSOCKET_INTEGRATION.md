@@ -85,3 +85,7 @@ CLI 無人值守測試可以沿用目標專案既有 GitHub Actions；此本機�
 3. 首頁冒煙測試能輸出每個步驟的結果；不得把靜態驗證當成會員登入通過。
 4. 不將密碼、OTP、Cookie、secret key 寫入報告。
 5. 真實專案 E2E、CI 和外掛安裝必須分別提供實際執行證據，否則標示「未執行」。
+
+## v0.3.0 QA / E2E 驗收
+
+`config/memberwebsocket-dev.smoke.json` 已加入四個必要驗收條件（QA-001、E2E-001、E2E-002、E2E-003），並由 `e2e_acceptance`、控制面板與本機 report.json 顯示 Gate。詳見 `docs/QA_E2E_ACCEPTANCE.md`。此 Gate 只代表四個唯讀條件的執行結果，不能宣稱全部會員系統功能驗收完成。
