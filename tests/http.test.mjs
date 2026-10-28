@@ -13,6 +13,10 @@ test('dashboard binds loopback and requires CSRF token for state changes', async
     assert.match(html, /E2E Takeover Agent/);
     assert.match(html, /id="preset"/);
     assert.match(html, /id="loadPreset"/);
+    assert.match(html, /id="device"/);
+    const devices=await fetch(`${url}/api/devices`);
+    assert.equal(devices.status,200);
+    assert.equal((await devices.json()).devices.length,4);
     const presets=await fetch(`${url}/api/profiles`);
     assert.equal(presets.status,200);
     const profileListing=await presets.json();
