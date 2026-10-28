@@ -1,0 +1,59 @@
+{
+  "targets": [
+    {
+      "id": "admin",
+      "name": "管理端",
+      "kind": "admin",
+      "baseUrl": "http://localhost:3000",
+      "startPath": "/admin",
+      "device": "desktop"
+    },
+    {
+      "id": "client-web",
+      "name": "用戶端 A",
+      "kind": "client",
+      "baseUrl": "http://localhost:3001",
+      "startPath": "/",
+      "device": "desktop"
+    },
+    {
+      "id": "client-mobile",
+      "name": "用戶端 B（手機）",
+      "kind": "client",
+      "baseUrl": "http://localhost:3002",
+      "startPath": "/",
+      "device": "mobile"
+    }
+  ],
+  "accounts": [
+    {
+      "id": "admin-qa",
+      "name": "管理端測試帳號",
+      "method": "test_account",
+      "username": "admin-qa@example.test",
+      "targetIds": [
+        "admin"
+      ]
+    },
+    {
+      "id": "client-qa",
+      "name": "用戶端測試帳號",
+      "method": "test_account",
+      "username": "client-qa@example.test",
+      "targetIds": [
+        "client-web",
+        "client-mobile"
+      ]
+    },
+    {
+      "id": "client-line",
+      "name": "LINE 測試登入",
+      "method": "line",
+      "username": "",
+      "targetIds": [
+        "client-web",
+        "client-mobile"
+      ]
+    }
+  ]
+}
