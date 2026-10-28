@@ -30,6 +30,9 @@ try {
   } else if (['starting','running'].includes(engine.state)) {
     console.error('瀏覽器測試逾時，未通過驗收。');
   }
+  if (!['starting','running','manual'].includes(engine.state) && engine.running) {
+    await engine.running;
+  }
   const qa = engine.status().acceptance;
   accepted = engine.state === 'completed' && qa?.accepted === true;
   console.log(JSON.stringify({profile:id,state:engine.state,gate:qa?.gate,results:engine.results.map(x=>({name:x.name,status:x.status}))},null,2));
