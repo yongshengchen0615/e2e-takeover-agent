@@ -1,15 +1,19 @@
 {
   "name": "e2e-takeover-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "Visible Playwright E2E runner with manual login takeover and resume",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node src/server.mjs",
     "mcp": "node src/mcp.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/engine.mjs && node --check src/server.mjs && node --check src/mcp.mjs"
+    "check": "node --check src/engine.mjs && node --check src/server.mjs && node --check src/mcp.mjs && node --check src/workspace.mjs && node --check src/dashboard.js"
   },
-  "dependencies": { "playwright": "^1.58.0" }
+  "dependencies": {
+    "playwright": "^1.58.0"
+  }
 }
