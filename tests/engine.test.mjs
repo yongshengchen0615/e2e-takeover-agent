@@ -95,3 +95,37 @@ test('stop during manual pause cancels pending automation', async () => {
   assert.equal(engine.state, 'stopped');
   assert.equal(fake.calls.length, 0);
 });
+
+
+test('explicit resume criteria block premature handoff and retain the same browser session', async () => {
+  const fake = setup();
+  const engine = new E2EEngine({ browserFactory: fake.browserFactory });
+  assert.throws(() => validatePlan({ baseUrl: 'http://localhost:3000', resumeWhen: {} }), /resumeWhen/);
+  assert.throws(() => validatePlan({ baseUrl: 'http://localhost:3000', resumeWhen: { path: '//host.example/login' } }), /站內/);
+  assert.throws(() => validatePlan({ baseUrl: 'http://localhost:3000', resumeWhen: { selector: '' } }), /selector/);
+
+  let authenticatedElementVisible = false;
+  const originalLocator = fake.page.locator;
+  fake.page.locator = selector => selector === '#logged-in-marker'
+    ? { isVisible: async () => authenticatedElementVisible }
+    : originalLocator(selector);
+
+  await engine.start({ baseUrl: 'http://localhost:3000',
+    resumeWhen: { path: '/member/', selector: '#logged-in-marker' },
+    steps: [ { action: 'goto', path: '/login' }, { action: 'assertVisible', selector: 'main' } ]
+  });
+  await until(() => engine.state === 'manual');
+  fake.loginDone();
+  await assert.rejects(engine.resume(), /路徑/);
+  assert.equal(engine.state, 'manual');
+  await fake.page.goto('http://localhost:3000/member/');
+  await assert.rejects(engine.resume(), /元件/);
+  assert.equal(engine.state, 'manual');
+  authenticatedElementVisible = true;
+  const originalPage = engine.page;
+  await engine.resume();
+  await until(() => engine.state === 'completed');
+  assert.equal(engine.page, originalPage, 'resume must retain the original page');
+  assert.equal(engine.results.length, 2);
+  await engine.stop();
+});

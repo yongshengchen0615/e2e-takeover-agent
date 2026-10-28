@@ -4,6 +4,8 @@ import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { E2EEngine } from './engine.mjs';
+import { listProfiles, createProfilePlan } from './profiles.mjs';
+import { listDevices } from './devices.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const baseHeaders = {
@@ -47,6 +49,11 @@ export function createDashboard(engine = new E2EEngine(), { host = '127.0.0.1', 
         const content = await readFile(resolve(ROOT, `src/${filename}`));
         res.writeHead(200, { ...baseHeaders, 'Content-Type': filename.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8' });
         return res.end(content);
+      }
+      if (req.method === 'GET' && url.pathname === '/api/devices') return json(res, 200, { devices: listDevices() });
+      if (req.method === 'GET' && url.pathname === '/api/profiles') return json(res, 200, { profiles: listProfiles() });
+      if (req.method === 'GET' && url.pathname === '/api/profile') {
+        return json(res, 200, { plan: createProfilePlan(url.searchParams.get('id')) });
       }
       if (req.method === 'GET' && url.pathname === '/api/status') return json(res, 200, engine.status());
       if (req.method === 'GET' && url.pathname === '/api/preview') {

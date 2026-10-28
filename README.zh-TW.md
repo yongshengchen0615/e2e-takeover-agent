@@ -1,4 +1,4 @@
-# E2E Takeover Agent — v0.1.0 MVP
+# E2E Takeover Agent — v0.5.0（管理端／用戶端／手機畫面測試）
 
 針對 **Web 專案**的可見 Playwright E2E 測試工具。當需要登入、雙重驗證或第三方登入時，交還操控權讓使用者直接操作同一個 Chromium 瀏覽器視窗，完成登入後恢復後續測試。
 
@@ -11,6 +11,53 @@
 - 人工接管期間不擷取預覽截圖，使用者可在 Chromium 視窗操作；按「登入完成，繼續」後檢查離開登入畫面，從原本步驟接續
 - 結果輸出到 `artifacts/report.json`；不存 Cookie、不存登入憑證、不擷取登入時的 Trace
 - MCP `stdio` 工具與 Agent Plugins `plugin.json`/`mcp.json`/`skills` 封裝
+
+## v0.2.0 新增
+
+- `resumeWhen`：人工接管恢復之前可指定**登入後路徑**及／或**登入後可見元件**，避免只靠離開登入網址就視為成功。若兩者皆指定，必須同時符合。無設定時仍保留原版啟發式行為。
+- 儀表板可貼上**完整測試計畫 JSON**（含 baseUrl、steps、resumeWhen），也可沿用原本的步驟陣列。
+- `config/memberwebsocket-dev.smoke.json`：Netlify MemberWebsocket 開發入口唯讀冒煙測試，需手動允許遠端測試；**尚未宣稱真實站點測試通過**。
+- 專案對應、風險與後續測試矩陣：`docs/MEMBERWEBSOCKET_INTEGRATION.md`。
+
+**注意**：既有的本機控制介面可視化，並不代表 ChatGPT 網頁或手機可以直接接管遠端瀏覽器。
+
+## GitHub Project #5 關聯
+
+本外掛程式碼儲存庫：[e2e-takeover-agent](https://github.com/yongshengchen0615/e2e-takeover-agent)。
+目標管理看板：[Project #5 · 01｜開發看板](https://github.com/users/yongshengchen0615/projects/5/views/3)（另有 [QA 驗收視圖](https://github.com/users/yongshengchen0615/projects/5/views/6)）。
+開發追蹤：[Pull Request #1](https://github.com/yongshengchen0615/e2e-takeover-agent/pull/1)。
+
+**看板連結尚未完成**：2026-10-28 嘗試透過 GitHub Projects 外掛直接加入 PR #1 時，收到 `Resource not accessible by integration`（403）。待 Projects 權限開啟後，才能完成 PR 卡片新增、驗收欄位同步；以上連結只是交叉參照，並不代表已新增看板項目。
+
+## v0.5.0 — 手機畫面模擬與 RWD 測試
+
+- 儀表板新增 **畫面尺寸／手機模擬** 下拉選單：桌面 1440×900、小手機 360×800、標準手機 390×844、大手機 430×932。
+- 使用 Playwright Chromium 的 `viewport`、`isMobile`、`hasTouch` 與 `deviceScaleFactor` 配置模擬手機 CSS 排版。
+- 手機角色方案自動加入 `assertNoHorizontalOverflow` 驗收，檢查頁面是否有超出 viewport 的水平滾動；結果記入 QA 報告與 Gate。
+- MCP 新增 `e2e_devices`，`e2e_start_profile` 支援 `device` 參數；也支援自訂 JSON `device`。
+- GitHub Actions 的唯讀角色測試矩陣涵蓋管理端／用戶端與桌面／標準手機組合。
+- **限制**：此為瀏覽器模擬，不代表真實 iOS Safari、Android Chrome 或 LINE App 內 LIFF 均已通過；不儲存登入中的畫面。
+
+## v0.4.0 — 管理端與用戶端測試設定
+
+- 本機儀表板新增**測試對象／方案**選單與**載入選取的測試方案**按鈕：選擇管理端、會員卡、集點卡、預約、活動票券、活動日曆。
+- 各有兩種驗證層級：**頁面結構（DOM 存在，無需登入）**或**登入後 UI 驗收（人工登入接管，登入後元件必須可見）**。結構測試不能證明使用者已授權。
+- 預設方案均為唯讀，不會建立預約、變更會員、領取票券、轉贈點數或寫入 Supabase 資料。
+- 新增 `assertPresent`（可驗證隱藏的 HTML 結構）、強化 `assertVisible` 的載入等待與重複登入接管提示處理。
+- 新增 `e2e_profiles` 與 `e2e_start_profile` MCP 工具，原有 JSON 計畫與 `e2e_start` 仍相容。
+- 新增 GitHub Actions 唯讀 Chromium 角色檢查（`role-smoke.yml`），獨立驗證管理端與用戶端結構，附 QA 報告；不能取代登入後 E2E。
+- 詳細覆蓋與限制：`docs/ROLE_TEST_PROFILES.md`。
+
+**使用**：本機啟動儀表板 → 選「管理端｜頁面結構」或「用戶端｜會員卡登入後驗收」等 → 載入方案 → 核對受測網址與測試 JSON → 開始測試。對 Netlify staging 必須顯式開啟 `E2E_ALLOW_REMOTE=1`。
+
+## v0.3.0 新增：QA / E2E 驗收
+
+- 測試計畫可加入 `acceptance: { "method": "QA / E2E", "criteria": [...] }`，每項條件必須對應已執行的斷言步驟。
+- 只有「所有必要條件已通過」且「整體測試狀態 completed」，驗收 Gate 才會顯示 `passed`；人工接管、失敗、停止或未執行都**不算驗收成功**。
+- 新增 `e2e_acceptance` MCP 工具、儀表板 QA / E2E 驗收列表、`artifacts/report.json` 結果與安全摘要。
+- 針對真實 E2E 的報告，可使用 `npm run acceptance:check -- artifacts/report.json` 進行 fail-closed 驗收；沒有通過證據即傳回非零退出碼。
+- MemberWebsocket-dev 的唯讀冒煙計畫已加入四項必要 QA / E2E 驗收。
+- 請參考 `docs/QA_E2E_ACCEPTANCE.md` 的完整驗收格式、範例、判定規則及 GitHub Project #5 權限限制。
 
 ## 安裝（在你自己的桌上型電腦）
 
@@ -57,7 +104,7 @@ $env:E2E_ALLOW_REMOTE="1"; npm start
 
 `plugin.json` 是 Agent Plugins 的可攜 Manifest；`mcp.json` 設定本地 `stdio` MCP server。若在允許本地 MCP 程序的 Agent/桌面環境使用，請先完成 `npm install` 與 Chromium 安裝，然後由支援 local executor 的客戶端啟動此外掛。此 ZIP **不能直接讓 ChatGPT 網頁版控制你的本機電腦**；需要客戶端、權限、MCP 連線與安裝驗證。
 
-暴露工具：`e2e_open_dashboard`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`。若只是要使用儀表板，完全不需連 MCP。
+暴露工具：`e2e_open_dashboard`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`、`e2e_acceptance`、`e2e_profiles`、`e2e_start_profile`。若只是要使用儀表板，完全不需連 MCP。
 
 ## 安全性
 

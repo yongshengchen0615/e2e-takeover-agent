@@ -1,0 +1,46 @@
+name: Role UI read-only browser smoke
+
+on:
+  pull_request:
+    paths:
+      - 'src/profiles.mjs'
+      - 'src/run-role-smoke.mjs'
+      - 'src/engine.mjs'
+      - 'src/devices.mjs'
+      - '.github/workflows/role-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    name: Headless UI / ${{ matrix.profile }} / ${{ matrix.device }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [admin-structure, client-structure]
+        device: [desktop, mobileStandard]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Test only DOM structure using a real headless browser
+        env:
+          E2E_ALLOW_REMOTE: '1'
+        run: node src/run-role-smoke.mjs ${{ matrix.profile }} ${{ matrix.device }}
+      - name: Upload per-role redacted QA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-${{ matrix.profile }}-${{ matrix.device }}
+          path: artifacts/${{ matrix.profile }}/${{ matrix.device }}/report.json
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,3 +1,5 @@
+> v0.4.0: Admin and client test profiles are now available in the local dashboard and via MCP (`e2e_profiles` / `e2e_start_profile`). Includes read-only DOM structure checks and separate human-login UI acceptance templates for admin/member/points/booking/event/calendar. See [role test profiles](docs/ROLE_TEST_PROFILES.md). Structure checks do **not** prove authentication or backend behavior. Real browser E2E and plugin installation require separate verification.
+
 # E2E Takeover Agent
 
 > 可視化、可人工接管的 Web E2E 測試工具。以 Playwright 執行瀏覽器測試；碰到登入、雙重驗證或其他需要人員介入的步驟時，暫停自動化並讓使用者在**同一個 Chromium 工作階段**操作，完成後再繼續測試。

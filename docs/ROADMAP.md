@@ -10,7 +10,48 @@
 - [ ] 在實際目標 Web 專案執行完整 E2E 驗收
 - [ ] 完成目標 ChatGPT／Agent 客戶端的安裝連線驗收
 
-## v0.2.0 — 可靠性與安全
+## v0.5.0 — 手機畫面驗收（開發分支）
+
+- [x] 固定手機 360×800、390×844、430×932 與桌面 1440×900 預設尺寸
+- [x] Playwright `viewport/isMobile/hasTouch/deviceScaleFactor` 模擬
+- [x] RWD 橫向溢出檢查，加入必要 QA/E2E 驗收與報告
+- [x] 儀表板手機尺寸設定、MCP 裝置列舉與指定裝置執行
+- [x] CI 管理端／用戶端 × 桌面／手機檢查矩陣
+- [ ] 真實 iPhone / Android / LINE LIFF 測試
+- [ ] 更完整的截圖基準比對與無障礙驗收
+
+## v0.4.0 — 管理端／用戶端測試設定（開發分支）
+
+- [x] 管理端與用戶端的 8 組專案測試方案（2 組頁面結構，6 組人工登入驗收）
+- [x] 儀表板選擇／載入測試方案，支援自訂測試網址
+- [x] MCP 測試方案列出及直接執行
+- [x] `assertPresent` 結構驗證、`assertVisible` 載入等待、重複接管提示避免
+- [x] 測試方案均不包含會寫資料的 click / fill
+- [ ] 真實 Netlify 管理端與用戶端完整登入驗收
+- [ ] 真實 LINE App LIFF／管理員權限／Supabase RLS E2E
+- [ ] ChatGPT 外掛本機 executor 安裝驗證
+
+## v0.3.0 — QA / E2E 驗收（開發分支）
+
+- [x] 驗收方案 `acceptance.method = "QA / E2E"` 與條件驗證
+- [x] 每條驗收需引用至少一個真實斷言
+- [x] `passed/failed/blocked/in_progress/not_run/incomplete` 驗收關卡
+- [x] 儀表板與 MCP 查詢 QA 驗收結果
+- [x] 報告輸出驗收證據、四項 MemberWebsocket 唯讀冒煙驗收
+- [ ] GitHub CI 驗證 v0.3.0 測試
+- [ ] 真實 Netlify 站台、登入接管與後端驗收
+- [ ] GitHub Project #5 items/fields 403 授權後再評估同步
+
+## v0.2.0（進行中）
+
+- [x] `resumeWhen` 登入後 path/selector 驗證與對應單元測試（程式碼已寫入待驗證分支）
+- [x] 儀表板支援完整計畫 JSON
+- [x] MemberWebsocket-dev 唯讀冒煙測試計畫與整合文件
+- [ ] 經由 GitHub CI／本機測試驗證本次程式修改
+- [ ] 在 MemberWebsocket-dev Netlify 測試站執行真實瀏覽器測試
+- [ ] ChatGPT 外掛安裝／實際工具連線與真人登入接管驗收
+
+## v0.2.1 — 可靠性與安全
 
 - [ ] 使用者可設定登入成功判斷條件（不是單純判斷離開登入頁）
 - [ ] 明確的接管／恢復狀態鎖與多視窗同步

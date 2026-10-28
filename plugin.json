@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "e2e-takeover-agent",
-  "version": "0.1.0",
-  "description": "可視化 E2E 測試，遇到登入時交由使用者接管，完成後以同一瀏覽器工作階段恢復測試。",
+  "version": "0.5.0",
+  "description": "管理端與用戶端可視化 E2E，支援手機螢幕模擬、RWD 溢出檢查、人工登入接管與 QA 驗收。",
   "extensions": {
     "com.openai": {
       "requires_local_executor": true,

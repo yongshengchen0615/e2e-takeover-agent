@@ -1,8 +1,10 @@
 import { EventEmitter } from 'node:events';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { validateAcceptance, evaluateAcceptance } from './acceptance.mjs';
+import { validateDevice, contextOptions } from './devices.mjs';
 
-const allowedActions = new Set(['goto', 'click', 'fill', 'assertVisible', 'assertText', 'assertUrl', 'pauseForLogin']);
+const allowedActions = new Set(['goto', 'click', 'fill', 'assertVisible', 'assertPresent', 'assertText', 'assertUrl', 'assertNoHorizontalOverflow', 'pauseForLogin']);
 const MAX_STEPS = 80;
 const sensitiveSelector = /password|passcode|otp|2fa|secret|token|credential|verification.code/i;
 const safeError = err => String(err?.message ?? err).split('\n')[0].replace(/https?:\/\/\S+/g, '[URL 已隱藏]').slice(0, 200);
@@ -32,7 +34,7 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
       const target = new URL(step.path, baseUrl);
       if (target.origin !== baseUrl.origin || target.username || target.password) throw new Error('禁止跨來源自動導向；第三方登入請使用人工接管');
     }
-    if (['click', 'fill', 'assertVisible', 'assertText'].includes(s.action)) requireString('selector');
+    if (['click', 'fill', 'assertVisible', 'assertPresent', 'assertText'].includes(s.action)) requireString('selector');
     if (s.action === 'fill') {
       requireString('value');
       if (sensitiveSelector.test(s.selector)) throw new Error('敏感資訊請透過人工接管輸入，不得使用 fill 填寫密碼／OTP／權杖');
@@ -41,7 +43,35 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
     if (s.action === 'assertUrl') requireString('path');
     return step;
   });
-  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean };
+  let resumeWhen;
+  if (input.resumeWhen !== undefined) {
+    const rule = input.resumeWhen;
+    if (!rule || typeof rule !== 'object' || Array.isArray(rule) ||
+        !Object.keys(rule).length || Object.keys(rule).some(k => !['path', 'selector'].includes(k))) {
+      throw new Error('resumeWhen 僅接受 path 或 selector 作為登入成功條件');
+    }
+    resumeWhen = {};
+    if (rule.path !== undefined) {
+      if (typeof rule.path !== 'string' || !rule.path.startsWith('/') || rule.path.startsWith('//') || rule.path.length > 500) {
+        throw new Error('resumeWhen.path 必須是站內絕對路徑');
+      }
+      const target = new URL(rule.path, baseUrl);
+      if (target.origin !== baseUrl.origin) throw new Error('resumeWhen.path 不可跨來源');
+      resumeWhen.path = target.pathname;
+    }
+    if (rule.selector !== undefined) {
+      if (typeof rule.selector !== 'string' || !rule.selector.trim() || rule.selector.length > 300) {
+        throw new Error('resumeWhen.selector 必須是有效 CSS selector');
+      }
+      resumeWhen.selector = rule.selector;
+    }
+  }
+  const acceptance = validateAcceptance(input.acceptance, clean);
+  const device = validateDevice(input.device ?? 'desktop');
+  const profileId = typeof input.profileId === 'string' && /^[a-z0-9-]{1,60}$/.test(input.profileId) ? input.profileId : undefined;
+  const audience = ['admin','client'].includes(input.audience) ? input.audience : undefined;
+  const level = ['structure','authenticated'].includes(input.level) ? input.level : undefined;
+  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen, acceptance, device, profileId, audience, level };
 }
 
 export class E2EEngine extends EventEmitter {
@@ -62,6 +92,7 @@ export class E2EEngine extends EventEmitter {
     this.pauseReason = null;
     this._resume = null;
     this._cancelled = false;
+    this._autoHandoffForNextPause = false;
   }
   log(type, message) {
     const event = { at: new Date().toISOString(), type, message };
@@ -70,7 +101,10 @@ export class E2EEngine extends EventEmitter {
     this.emit('update', event);
   }
   status() {
-    return { state: this.state, pauseReason: this.pauseReason, results: this.results, events: this.events, total: this.plan?.steps.length ?? 0 };
+    return { state: this.state, pauseReason: this.pauseReason, results: this.results, events: this.events, total: this.plan?.steps.length ?? 0,
+      profile: this.plan ? { id: this.plan.profileId ?? null, audience: this.plan.audience ?? null, level: this.plan.level ?? null } : null,
+      device: this.plan?.device ?? null,
+      acceptance: evaluateAcceptance(this.plan?.acceptance, this.results, this.state) };
   }
   async start(planInput) {
     if (!['idle', 'completed', 'failed', 'stopped'].includes(this.state)) throw new Error('已有執行中的測試；請先結束');
@@ -79,11 +113,12 @@ export class E2EEngine extends EventEmitter {
     this.results = [];
     this.events = [];
     this._cancelled = false;
+    this._autoHandoffForNextPause = false;
     this.state = 'starting';
     this.log('info', '啟動可見瀏覽器，準備進行測試');
     try {
       this.browser = await this.browserFactory();
-      this.context = await this.browser.newContext();
+      this.context = await this.browser.newContext(contextOptions(this.plan.device));
       this.page = await this.context.newPage();
       this.state = 'running';
       this.log('info', '測試開始');
@@ -125,6 +160,12 @@ export class E2EEngine extends EventEmitter {
   async resume() {
     if (this.state !== 'manual') throw new Error('測試尚未進入人工接管狀態');
     if (await this.needsLogin()) throw new Error('尚未確認返回受測網站的登入後頁面，請先完成登入並返回原網站');
+    if (this.plan.resumeWhen?.path && new URL(this.page.url()).pathname !== this.plan.resumeWhen.path) {
+      throw new Error('尚未到達設定的登入後路徑，測試仍維持人工接管');
+    }
+    if (this.plan.resumeWhen?.selector && !(await this.page.locator(this.plan.resumeWhen.selector).isVisible())) {
+      throw new Error('登入後指定元件尚未顯示，測試仍維持人工接管');
+    }
     this.state = 'running';
     this.pauseReason = null;
     this.log('resume', '使用者已交還控制權；同一瀏覽器工作階段恢復測試');
@@ -141,11 +182,35 @@ export class E2EEngine extends EventEmitter {
     if (this._cancelled) throw new Error('測試已停止');
   }
   async runStep(s) {
+    if (s.action !== 'pauseForLogin') this._autoHandoffForNextPause = false;
     switch (s.action) {
       case 'goto': await this.page.goto(new URL(s.path, this.plan.baseUrl).toString(), { waitUntil: 'domcontentloaded', timeout: 20000 }); break;
       case 'click': await this.page.locator(s.selector).click({ timeout: 8000 }); break;
       case 'fill': await this.page.locator(s.selector).fill(s.value, { timeout: 8000 }); break;
-      case 'assertVisible': if (!(await this.page.locator(s.selector).isVisible())) throw new Error('指定元件不可見'); break;
+      case 'assertVisible': {
+        const locator = this.page.locator(s.selector);
+        if (typeof locator.waitFor === 'function') {
+          await locator.waitFor({ state: 'visible', timeout: 12000 });
+        } else if (!(await locator.isVisible())) {
+          throw new Error('指定元件不可見');
+        }
+        break;
+      }
+      case 'assertNoHorizontalOverflow': {
+        if (typeof this.page.evaluate !== 'function') throw new Error('瀏覽器不支援 RWD 溢出檢查');
+        const metrics = await this.page.evaluate(() => {
+          const root = document.documentElement;
+          return { viewportWidth: root.clientWidth, scrollWidth: root.scrollWidth };
+        });
+        if (!metrics || !Number.isFinite(metrics.viewportWidth) || !Number.isFinite(metrics.scrollWidth) ||
+          metrics.scrollWidth > metrics.viewportWidth + 2) throw new Error('頁面發生橫向溢出');
+        break;
+      }
+      case 'assertPresent': {
+        const locator = this.page.locator(s.selector);
+        if (typeof locator.count !== 'function' || (await locator.count()) < 1) throw new Error('指定 DOM 元件不存在');
+        break;
+      }
       case 'assertText': {
         const content = await this.page.locator(s.selector).innerText({ timeout: 8000 });
         if (!content.includes(s.text)) throw new Error('指定元件文字不符合預期');
@@ -156,7 +221,16 @@ export class E2EEngine extends EventEmitter {
         if (this.page.url() !== expected) throw new Error('目前網址與預期不同');
         break;
       }
-      case 'pauseForLogin': this.takeover('此步驟要求人工登入'); await this.waitIfManual(); break;
+      case 'pauseForLogin': {
+        if (this._autoHandoffForNextPause) {
+          this._autoHandoffForNextPause = false;
+          this.log('info', '上一步已完成自動登入接管，略過重複的人工登入暫停');
+        } else {
+          this.takeover('此步驟要求人工登入');
+          await this.waitIfManual();
+        }
+        break;
+      }
     }
   }
   async run() {
@@ -168,7 +242,10 @@ export class E2EEngine extends EventEmitter {
         await this.runStep(step);
         if (this._cancelled) return;
         // 在登入畫面或跨來源頁面停下；不記錄任何登入畫面截圖
-        if (this.state !== 'manual' && await this.needsLogin()) this.takeover('偵測到登入頁面或第三方驗證流程');
+        if (this.state !== 'manual' && await this.needsLogin()) {
+          this.takeover('偵測到登入頁面或第三方驗證流程');
+          this._autoHandoffForNextPause = true;
+        }
         await this.waitIfManual();
         this.results.push({ name: step.name, status: 'passed', elapsedMs: Date.now() - t0 });
         this.log('pass', `通過：${step.name}`);
@@ -196,11 +273,15 @@ export class E2EEngine extends EventEmitter {
     try {
       await mkdir(this.artifactsDir, { recursive: true, mode: 0o700 });
       await writeFile(resolve(this.artifactsDir, 'report.json'), JSON.stringify({
-        state: this.state, generatedAt: new Date().toISOString(), results: this.results
+        state: this.state, generatedAt: new Date().toISOString(), results: this.results,
+        profile: this.status().profile,
+        device: this.status().device,
+        acceptance: this.status().acceptance
       }, null, 2), { mode: 0o600 });
     } catch { this.log('warn', '無法輸出本機報告檔'); }
   }
   async stop() {
+    const wasActive = ['starting', 'running', 'manual'].includes(this.state);
     this._cancelled = true;
     const cb = this._resume;
     this._resume = null;
@@ -212,6 +293,7 @@ export class E2EEngine extends EventEmitter {
     this.state = 'stopped';
     this.pauseReason = null;
     this.log('stop', '測試已停止，瀏覽器已關閉');
+    if (wasActive) await this.writeReport();
     return this.status();
   }
 }
