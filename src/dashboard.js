@@ -65,6 +65,10 @@ $('start').onclick = async () => {
     const input = JSON.parse($('steps').value);
     const plan = Array.isArray(input) ? { baseUrl: $('base').value, steps: input } : input;
     if (!plan || typeof plan !== 'object' || Array.isArray(plan)) throw new Error('請填寫步驟陣列或完整測試計畫物件');
+    if (!loadedProfileId || plan.profileId !== loadedProfileId) {
+      // Custom plans can also select a phone viewport without loading a role preset.
+      plan.device = plan.device ?? $('device').value;
+    }
     if (loadedProfileId && plan.profileId === loadedProfileId && plan.device !== $('device').value) {
       throw new Error('畫面尺寸已修改，請按「載入選取的測試方案」重新產生相應 QA 檢查');
     }
