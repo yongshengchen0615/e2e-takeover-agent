@@ -5,7 +5,7 @@
 ## 一鍵測試流程
 
 1. 在已部署的 HTTPS 控制台登入管理者帳號。
-2. 填「管理端網址」及「用戶端網址」（多個用戶端可每行一個，最多 8 個）。
+2. 「管理端網址」已預填 `https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app/admin/?business=test`；輸入「用戶端網址」（多個用戶端可每行一個，最多 8 個），或修改管理端網址以測試其他授權環境。
 3. 按 **開始管理端＋用戶端 E2E 自動測試**。
 4. 如需 LINE 或測試帳號登入，在「進階設定」勾選「需要 LINE／測試帳號登入」，確保每站開啟後暫停供人工登入；沒有勾選時會直接執行預設的基礎冒煙測試。
 5. 控制台依序建立獨立 Browserbase Chromium 工作階段：管理端桌面 1440×900、用戶端預設手機 390×844。逐一開啟網站，確認頁面可見，顯示即時預覽、步驟日誌及測試結果。
@@ -17,6 +17,7 @@
 
 - 官方 Render Web Service 可部署 Node 長駐 HTTP 服務，會提供 *.onrender.com HTTPS 網域。此程式已加入 [render.yaml](../render.yaml) 與 \`npm run cloud\` 啟動命令。
 - 建立 Browserbase 帳號與專案，從其後台取得 API Key 和 Project ID；雲端機密設定中加入 \`BROWSERBASE_API_KEY\`、\`BROWSERBASE_PROJECT_ID\`。
+- 已提供的管理端網域：`https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app`；預填網址的 `/admin/?business=test` 會完整保留並作為測試開啟路徑。這個網域要加入 `E2E_ALLOWED_ORIGINS`，否則雲端安全限制會拒絕啟動測試。
 - 在 Render Web Service 設定 \`PUBLIC_BASE_URL\` 為你的實際 **https://...onrender.com** 網站 origin；\`CLOUD_ADMIN_USER\` 與 **24 字以上隨機密碼** \`CLOUD_ADMIN_PASSWORD\`；\`E2E_ALLOWED_ORIGINS\` 設為允許測試的 HTTPS 網站來源清單，以逗號分隔（**不要含路徑**）。
 - 在 Render 連接 GitHub 此 PR 的分支，建立 Web Service（建議先使用測試／預覽服務，不要覆蓋既有產品站台）；使用 [render.yaml](../render.yaml) 建置，或自行設定 Build: \`npm install --no-audit --no-fund\`、Start: \`npm run cloud\`。
 - 在部署完成後透過 \`https://...onrender.com/healthz\` 確認公開健康檢查，再用 Basic Auth 登入根目錄。
