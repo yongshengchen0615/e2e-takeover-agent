@@ -2,8 +2,9 @@ import { EventEmitter } from 'node:events';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { validateAcceptance, evaluateAcceptance } from './acceptance.mjs';
+import { validateDevice, contextOptions } from './devices.mjs';
 
-const allowedActions = new Set(['goto', 'click', 'fill', 'assertVisible', 'assertPresent', 'assertText', 'assertUrl', 'pauseForLogin']);
+const allowedActions = new Set(['goto', 'click', 'fill', 'assertVisible', 'assertPresent', 'assertText', 'assertUrl', 'assertNoHorizontalOverflow', 'pauseForLogin']);
 const MAX_STEPS = 80;
 const sensitiveSelector = /password|passcode|otp|2fa|secret|token|credential|verification.code/i;
 const safeError = err => String(err?.message ?? err).split('\n')[0].replace(/https?:\/\/\S+/g, '[URL 已隱藏]').slice(0, 200);
@@ -66,10 +67,11 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
     }
   }
   const acceptance = validateAcceptance(input.acceptance, clean);
+  const device = validateDevice(input.device ?? 'desktop');
   const profileId = typeof input.profileId === 'string' && /^[a-z0-9-]{1,60}$/.test(input.profileId) ? input.profileId : undefined;
   const audience = ['admin','client'].includes(input.audience) ? input.audience : undefined;
   const level = ['structure','authenticated'].includes(input.level) ? input.level : undefined;
-  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen, acceptance, profileId, audience, level };
+  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen, acceptance, device, profileId, audience, level };
 }
 
 export class E2EEngine extends EventEmitter {
@@ -101,6 +103,7 @@ export class E2EEngine extends EventEmitter {
   status() {
     return { state: this.state, pauseReason: this.pauseReason, results: this.results, events: this.events, total: this.plan?.steps.length ?? 0,
       profile: this.plan ? { id: this.plan.profileId ?? null, audience: this.plan.audience ?? null, level: this.plan.level ?? null } : null,
+      device: this.plan?.device ?? null,
       acceptance: evaluateAcceptance(this.plan?.acceptance, this.results, this.state) };
   }
   async start(planInput) {
@@ -115,7 +118,7 @@ export class E2EEngine extends EventEmitter {
     this.log('info', '啟動可見瀏覽器，準備進行測試');
     try {
       this.browser = await this.browserFactory();
-      this.context = await this.browser.newContext();
+      this.context = await this.browser.newContext(contextOptions(this.plan.device));
       this.page = await this.context.newPage();
       this.state = 'running';
       this.log('info', '測試開始');
@@ -193,6 +196,16 @@ export class E2EEngine extends EventEmitter {
         }
         break;
       }
+      case 'assertNoHorizontalOverflow': {
+        if (typeof this.page.evaluate !== 'function') throw new Error('瀏覽器不支援 RWD 溢出檢查');
+        const metrics = await this.page.evaluate(() => {
+          const root = document.documentElement;
+          return { viewportWidth: root.clientWidth, scrollWidth: root.scrollWidth };
+        });
+        if (!metrics || !Number.isFinite(metrics.viewportWidth) || !Number.isFinite(metrics.scrollWidth) ||
+          metrics.scrollWidth > metrics.viewportWidth + 2) throw new Error('頁面發生橫向溢出');
+        break;
+      }
       case 'assertPresent': {
         const locator = this.page.locator(s.selector);
         if (typeof locator.count !== 'function' || (await locator.count()) < 1) throw new Error('指定 DOM 元件不存在');
@@ -262,6 +275,7 @@ export class E2EEngine extends EventEmitter {
       await writeFile(resolve(this.artifactsDir, 'report.json'), JSON.stringify({
         state: this.state, generatedAt: new Date().toISOString(), results: this.results,
         profile: this.status().profile,
+        device: this.status().device,
         acceptance: this.status().acceptance
       }, null, 2), { mode: 0o600 });
     } catch { this.log('warn', '無法輸出本機報告檔'); }
