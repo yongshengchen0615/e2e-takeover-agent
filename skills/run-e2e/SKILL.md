@@ -1,6 +1,6 @@
 ---
 name: run-e2e
-description: Run visible, locally hosted website E2E tests, hand browser control to the user when login/2FA/CAPTCHA is required, and resume automation using the same browser session. Use for requests to test a web app with live preview and manual takeover.
+description: Run visible website E2E tests with human login takeover and QA/E2E acceptance criteria, evidence and release gates. Use for requests to test web apps, prepare QA acceptance, or verify E2E results.
 ---
 
 # E2E Takeover Agent
@@ -20,6 +20,15 @@ Use for web app E2E testing when a user needs a visible browser, test steps, hum
 7. When state is `manual`, stop driving the browser. Have the user sign in in the same visible Chromium window. No screenshots should be taken in manual mode. Never ask for login credentials in chat. Only call `e2e_resume` when the user explicitly indicates sign-in is complete; clicking dashboard resume is also valid.
 8. Verify assertions and final state after resuming. Never loop resume attempts to bypass login.
 9. Summarize passed, failed, blocked, not-run tests; separate simulated tests and actual target-website tests.
+
+## QA / E2E acceptance workflow
+
+1. For a user request to "QA / E2E 驗收" or "驗收方式", propose a plan with explicit `acceptance.method = "QA / E2E"` and `criteria`. Each criterion references unique `stepNames` containing at least one assertion, not just navigation or clicks. Specify `required` for release blocking conditions.
+2. Start using `e2e_start` and query `e2e_acceptance` or `e2e_status`. Distinguish `passed`, `failed`, `blocked`, `in_progress`, `not_run` and `incomplete`. Never claim approval from a "completed" or passing UI test without checking `accepted:true` and the actual scope.
+3. In human takeover mode the acceptance gate must be blocked. Do not trigger `e2e_resume` before the user completes authentication; `resumeWhen` assertions are additional verification, not a permission bypass.
+4. Give an acceptance table with ID, requirement, actual evidence, outcome, untested scope and run artifact path. `artifacts/report.json` is local only; do not claim remote evidence storage or Project status syncing.
+5. For MemberWebsocket-dev the four configured criteria only cover public landing-page and entry links. Do not describe LINE login, Supabase RLS, booking writes or project-wide QA as covered without separate confirmed test runs. GitHub Project #5 item/field access currently returns 403; never claim that status was updated.
+6. Never mark production release ready solely from an incomplete QA/E2E suite; require actual authorized staging E2E and other appropriate security/integration checks.
 
 ## Failure handling
 
