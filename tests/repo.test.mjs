@@ -10,10 +10,10 @@ test('repository contains required development and plugin files', async () => {
     'README.md', 'README.zh-TW.md', 'TESTING.md', 'SECURITY.md',
     'CONTRIBUTING.md', '.gitignore', '.github/workflows/ci.yml',
     'plugin.json', 'mcp.json', 'skills/run-e2e/SKILL.md',
-    'src/engine.mjs', 'src/acceptance.mjs', 'src/acceptance-cli.mjs', 'src/profiles.mjs', 'src/run-role-smoke.mjs', 'src/server.mjs', 'src/mcp.mjs',
+    'src/engine.mjs', 'src/acceptance.mjs', 'src/acceptance-cli.mjs', 'src/profiles.mjs', 'src/devices.mjs', 'src/run-role-smoke.mjs', 'src/server.mjs', 'src/mcp.mjs',
     'config/memberwebsocket-dev.smoke.json', 'docs/MEMBERWEBSOCKET_INTEGRATION.md',
     'docs/QA_E2E_ACCEPTANCE.md', 'docs/ROLE_TEST_PROFILES.md', '.github/workflows/role-smoke.yml',
-    'tests/role-smoke.test.mjs', 'tests/profiles.test.mjs', 'tests/acceptance.test.mjs', 'tests/acceptance-cli.test.mjs'
+    'tests/role-smoke.test.mjs', 'tests/profiles.test.mjs', 'tests/devices.test.mjs', 'tests/acceptance.test.mjs', 'tests/acceptance-cli.test.mjs'
   ];
   await Promise.all(files.map(fileExists));
 });
