@@ -1,12 +1,19 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { evaluateAcceptance } from './acceptance.mjs';
 
 const path = resolve(process.argv[2] ?? 'artifacts/report.json');
 try {
   const report = JSON.parse(await readFile(path, 'utf8'));
   const qa = report?.acceptance;
   const required = qa?.criteria?.filter?.(c => c?.required === true) ?? [];
+  const recomputed = qa?.criteria && Array.isArray(report?.results)
+    ? evaluateAcceptance(qa, report.results, report.state) : null;
   const valid = report?.state === 'completed' &&
+    Array.isArray(report?.results) && report.results.length > 0 &&
+    report.results.every(r => r.status === 'passed') &&
+    recomputed?.gate === 'passed' && recomputed?.accepted === true &&
+    recomputed.criteria.every((c, i) => c.status === qa.criteria[i].status) &&
     qa?.method === 'QA / E2E' &&
     qa?.gate === 'passed' &&
     qa?.accepted === true &&
