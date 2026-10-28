@@ -15,7 +15,7 @@ test('acceptance:check blocks missing, failed and falsified QA/E2E results, pass
     assert.notEqual(run(path).status,0, 'missing report must fail closed');
     const valid={ state:'completed', results:[{name:'首頁可見',status:'passed',elapsedMs:3}], acceptance: {
       method:'QA / E2E', gate:'passed', accepted:true, criteria:[
-        {id:'QA-001',required:true,status:'passed',evidence:[{name:'首頁可見',status:'passed'}]}
+        {id:'QA-001',title:'首頁驗收',required:true,stepNames:['首頁可見'],status:'passed',evidence:[{name:'首頁可見',status:'passed'}]}
       ]
     }};
     await writeFile(path,JSON.stringify(valid));
