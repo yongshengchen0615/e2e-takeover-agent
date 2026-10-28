@@ -1,0 +1,71 @@
+name: Remote E2E — 直接測試管理端／用戶端
+
+on:
+  workflow_dispatch:
+    inputs:
+      admin_url:
+        description: '管理端 HTTPS 網址（已預填）'
+        required: true
+        type: string
+        default: 'https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app/admin/?business=test'
+      client_urls:
+        description: '用戶端 HTTPS 網址（選填；最多 8 個，可用換行分隔）'
+        required: false
+        type: string
+        default: ''
+      mobile_clients:
+        description: '用戶端模擬手機 390×844'
+        required: true
+        type: boolean
+        default: true
+      screenshots:
+        description: '保存公開頁面截圖到 GitHub Artifact（注意：公開儲存庫可能被其他人看到）'
+        required: true
+        type: boolean
+        default: false
+
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/remote-e2e.yml'
+      - 'scripts/remote-smoke.mjs'
+      - 'tests/remote-smoke.test.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-remote-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  read-only-remote-e2e:
+    name: 真實 HTTPS 管理端 Chromium 冒煙測試
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 安裝套件
+        run: npm install --no-audit --no-fund
+      - name: 安裝 GitHub 雲端 Chromium
+        run: npx playwright install --with-deps chromium
+      - name: 檢查測試程式
+        run: node --test tests/remote-smoke.test.mjs
+      - name: 執行真實遠端網站 E2E
+        env:
+          E2E_ADMIN_URL: ${{ inputs.admin_url || 'https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app/admin/?business=test' }}
+          E2E_CLIENT_URLS: ${{ inputs.client_urls || '' }}
+          E2E_MOBILE_CLIENTS: ${{ inputs.mobile_clients == false && 'false' || 'true' }}
+          E2E_SCREENSHOTS: ${{ inputs.screenshots == true && 'true' || 'false' }}
+        run: node scripts/remote-smoke.mjs
+      - name: 保存測試報告（不包含登入密碼）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: remote-e2e-report-${{ github.run_id }}
+          path: artifacts/remote-e2e/
+          if-no-files-found: warn
+          retention-days: 7
