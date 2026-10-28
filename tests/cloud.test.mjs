@@ -123,3 +123,10 @@ test('cloud quick-start API accepts simple URLs after admin authentication and C
     assert.deepEqual(input, { adminUrl: 'https://admin.example.com', clientUrls: 'https://app.example.com' });
   } finally { await app.close(); await rm(root,{recursive:true,force:true}); }
 });
+
+
+test('cloud dashboard preloads the authorized staging admin URL including business query', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../src/cloud-dashboard.html', import.meta.url), 'utf8');
+  assert.match(html, /id="admin"[^>]*value="https:\/\/integrated-marketing-platform--memberwebsocket-dev-netlify\.netlify\.app\/admin\/\?business=test"/);
+});
