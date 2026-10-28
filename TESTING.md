@@ -1,3 +1,14 @@
+# v0.3.0 QA / E2E 驗收 — 實測紀錄（2026-10-28）
+
+- 程式碼與自動化測試已在 GitHub PR #1 的工作分支更新，**尚未合併至 main**。
+- [CI #39](https://github.com/yongshengchen0615/e2e-takeover-agent/actions/runs/40632528481) 在提交 `d23e5d5ad94d5e39c0888a222637880a595a98ed`：`npm run check` **成功**；`npm test` **16/16 通過、0 失敗**。本次 CI 驗證涵蓋核心 QA/E2E 與 CLI Gate；後續文件變更的最終提交仍以最新 CI 紀錄為準。
+- 測試涵蓋：驗收格式、不可驗證條件拒絕、必要斷言、通過/失敗/阻塞、手動接管與中止、報告證據、`acceptance:check` 對缺報告/假成功/缺步驟/失敗做拒絕、MCP 工具、專案唯讀 smoke 配置與結構。
+- 未執行：真正對 MemberWebsocket Netlify 站點執行 Playwright 瀏覽器 E2E、真實 LINE 人工登入驗收、完整 Supabase API/RLS 整合測試、在 ChatGPT/Codex 中安裝本地 Executor 外掛、GitHub Project #5 自動轉狀態（Items/Fields 403）。
+- 單元測試與 Mock browser 成功不能視為真實網站功能驗收。CLI Gate 應在**真正 E2E 執行之後**使用其原始 `artifacts/report.json`，不可採用合成報告做正式發布批准。
+- 風險：`report.json` 是本機一般檔案，沒有防竄改簽章，若進入正式 CI 請採可信來源／對應 commit SHA／受控 artifact；不應接收任意使用者上傳的「通過」報告。
+
+---
+
 # 測試驗證紀錄 — v0.1.0
 
 執行環境：Node.js v22.16.0（2026-10-27）。實測限此受控環境及本專案的模擬頁面，不代表任何使用者專案已通過 E2E。
