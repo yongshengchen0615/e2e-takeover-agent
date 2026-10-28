@@ -25,6 +25,13 @@ test('MCP stdio handshake, tool enumeration and dashboard access', async () => {
     const tools = await rpc('tools/list');
     assert.ok(tools.result.tools.some(t => t.name === 'e2e_resume'));
     assert.ok(tools.result.tools.some(t => t.name === 'e2e_acceptance'));
+    assert.ok(tools.result.tools.some(t => t.name === 'e2e_profiles'));
+    assert.ok(tools.result.tools.some(t => t.name === 'e2e_start_profile'));
+    const profiles=await rpc('tools/call',{name:'e2e_profiles',arguments:{}});
+    const parsed=JSON.parse(profiles.result.content[0].text);
+    assert.equal(parsed.profiles.length,8);
+    const invalid=await rpc('tools/call',{name:'e2e_start_profile',arguments:{profileId:'unknown-profile'}});
+    assert.equal(invalid.result.isError,true);
     const acceptanceTool = await rpc('tools/call', { name:'e2e_acceptance', arguments:{} });
     assert.equal(JSON.parse(acceptanceTool.result.content[0].text).status.acceptance, null);
     const opened = await rpc('tools/call', { name:'e2e_open_dashboard', arguments:{} });
