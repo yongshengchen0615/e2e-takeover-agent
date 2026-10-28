@@ -10,7 +10,8 @@ test('repository contains required development and plugin files', async () => {
     'README.md', 'README.zh-TW.md', 'TESTING.md', 'SECURITY.md',
     'CONTRIBUTING.md', '.gitignore', '.github/workflows/ci.yml',
     'plugin.json', 'mcp.json', 'skills/run-e2e/SKILL.md',
-    'src/engine.mjs', 'src/server.mjs', 'src/mcp.mjs'
+    'src/engine.mjs', 'src/server.mjs', 'src/mcp.mjs',
+    'src/workspace.mjs', 'tests/workspace.test.mjs', 'config/example.workspace.json'
   ];
   await Promise.all(files.map(fileExists));
 });
@@ -23,7 +24,7 @@ test('manifest names match npm package and sensitive artifacts are gitignored', 
   assert.equal(pkg.name, plugin.name);
   assert.equal(pkg.version, plugin.version);
   assert.ok(Object.keys(mcp.mcpServers).length > 0);
-  for (const pattern of ['node_modules/', 'artifacts/', 'playwright/.auth/', '.env']) {
+  for (const pattern of ['node_modules/', 'artifacts/', 'playwright/.auth/', '.env', 'config/local.workspace.json']) {
     assert.ok(gitignore.split(/\r?\n/).includes(pattern), `missing ${pattern} in .gitignore`);
   }
 });
