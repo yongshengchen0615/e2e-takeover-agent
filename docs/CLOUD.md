@@ -44,3 +44,23 @@ npm test
 測試涵蓋：遠端安全來源驗證、Browserbase SDK 呼叫 mock、控制台存取權／CSRF、URL-only 方案與獨立 session 排程。CI 通過不代表真正 Browserbase／LINE 端對端測試成功。
 
 要在開發環境模擬雲端服務的 HTTP 層，可使用程式測試輸入 Mock adapter；不要把假的 Browserbase session 當成真實測試結果。
+
+
+## ChatGPT 外掛預設進入雲端模式（v0.3.1）
+
+修正舊版外掛 \`e2e_start\` 錯誤：「預設僅允許 localhost；遠端測試需 E2E_ALLOW_REMOTE=1」。問題根源是既有 \`mcp.json\` 仍啟動 \`src/mcp.mjs\`（本機引擎），未使用雲端引擎。
+
+- 現在預設 MCP 進入點是 \`src/cloud-mcp.mjs\`，不啟動本機 Dashboard／Chromium，也**不需要** \`E2E_ALLOW_REMOTE=1\`。
+- \`e2e_start\`: 只傳 \`{"baseUrl":"https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app/admin/?business=test"}\`，會保留 \`/admin/?business=test\`。可指定 \`login:true\`，LINE 人工登入時暫停。
+- \`e2e_quick_start\`: 只填 \`adminUrl\`、\`clientUrls\`（多個用戶端可換行）。
+- \`e2e_live\`: 取得 Browserbase 短效瀏覽器控制網址；\`e2e_takeover\`／\`e2e_resume\`：人工接管與繼續；\`e2e_status\`：查看結果。
+- 實際連線前必須在**執行 MCP 的雲端環境**設定 \`BROWSERBASE_API_KEY\`、\`BROWSERBASE_PROJECT_ID\`、\`E2E_ALLOWED_ORIGINS\`；若沒有機密，會清楚回報缺少哪一項，不會回退到 localhost。瀏覽器主機和 MCP 所在伺服器**不一定**是 Render；使用者不必在自己的電腦設定。
+- 已部署 HTTPS 控制台的 \`PUBLIC_BASE_URL\` 可透過 \`e2e_open_dashboard\` 取得；若尚未部署，會回報尚未部署，不會偽造 localhost 網址。
+- 如確實需要在自己的電腦測試本機網頁，可選擇 \`npm run mcp:local\` 或 \`npm start\`（與雲端模式分開）。本機遠端網站仍需本機專屬的 \`E2E_ALLOW_REMOTE=1\`；**雲端模式不用**。
+- 修改原始碼與 Manifest 並不會自動更新已連線／已安裝的舊版外掛。需發佈、更新或重新連接 v0.3.1，才能改用雲端 MCP 入口。
+
+注意：E2E_ALLOWED_ORIGINS 僅填 HTTPS origin，不能加路徑及 \`?business=test\`，例如：
+
+\`\`\`text
+E2E_ALLOWED_ORIGINS=https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app
+\`\`\`
