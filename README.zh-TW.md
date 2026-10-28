@@ -1,4 +1,4 @@
-# E2E Takeover Agent — v0.4.0（管理端／用戶端測試設定）
+# E2E Takeover Agent — v0.5.0（管理端／用戶端／手機畫面測試）
 
 針對 **Web 專案**的可見 Playwright E2E 測試工具。當需要登入、雙重驗證或第三方登入時，交還操控權讓使用者直接操作同一個 Chromium 瀏覽器視窗，完成登入後恢復後續測試。
 
@@ -20,6 +20,15 @@
 - 專案對應、風險與後續測試矩陣：`docs/MEMBERWEBSOCKET_INTEGRATION.md`。
 
 **注意**：既有的本機控制介面可視化，並不代表 ChatGPT 網頁或手機可以直接接管遠端瀏覽器。
+
+## v0.5.0 — 手機畫面模擬與 RWD 測試
+
+- 儀表板新增 **畫面尺寸／手機模擬** 下拉選單：桌面 1440×900、小手機 360×800、標準手機 390×844、大手機 430×932。
+- 使用 Playwright Chromium 的 `viewport`、`isMobile`、`hasTouch` 與 `deviceScaleFactor` 配置模擬手機 CSS 排版。
+- 手機角色方案自動加入 `assertNoHorizontalOverflow` 驗收，檢查頁面是否有超出 viewport 的水平滾動；結果記入 QA 報告與 Gate。
+- MCP 新增 `e2e_devices`，`e2e_start_profile` 支援 `device` 參數；也支援自訂 JSON `device`。
+- GitHub Actions 的唯讀角色測試矩陣涵蓋管理端／用戶端與桌面／標準手機組合。
+- **限制**：此為瀏覽器模擬，不代表真實 iOS Safari、Android Chrome 或 LINE App 內 LIFF 均已通過；不儲存登入中的畫面。
 
 ## v0.4.0 — 管理端與用戶端測試設定
 
