@@ -10,3 +10,13 @@ select[multiple] option{padding:7px 8px}
 .full{width:100%;margin-top:8px}
 [hidden]{display:none!important}
 @media(max-width:480px){.two-col{grid-template-columns:1fr}}
+
+/* Cloud URL-only console: entry fields come first, with advanced options collapsed. */
+main.cloud-simple{grid-template-areas:"config preview";grid-template-columns:minmax(290px,0.72fr) minmax(0,1.5fr)}
+main.cloud-simple aside{grid-area:config}
+main.cloud-simple section.workspace{grid-area:preview}
+main.cloud-simple #clients{height:108px}
+main.cloud-simple .advanced{margin-top:16px;border-top:1px solid #314660;padding-top:14px;color:#c6d5e8}
+main.cloud-simple .advanced summary{cursor:pointer;font-size:13px}
+main.cloud-simple .advanced input[type="checkbox"]{width:auto;vertical-align:middle;margin-right:7px}
+@media(max-width:940px){main.cloud-simple{grid-template-columns:1fr;grid-template-areas:"config" "preview"}}
