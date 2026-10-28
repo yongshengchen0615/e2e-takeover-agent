@@ -14,6 +14,7 @@ test('cloud rejects non-allowlisted, private and non-HTTPS targets before openin
   await assert.rejects(engine.start({ baseUrl: 'http://localhost:3000' }), /HTTPS/);
   await assert.rejects(engine.start({ baseUrl: 'https://evil.example.com' }), /允許/);
   await assert.rejects(engine.start({ baseUrl: 'https://127.0.0.1' }), /禁止/);
+  await assert.rejects(engine.start({ baseUrl: 'https://[::ffff:127.0.0.1]' }), /禁止/);
   assert.equal(launched, 0);
 });
 
