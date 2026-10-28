@@ -30,7 +30,11 @@
   { "name": "確認首頁", "action": "assertVisible", "selector": "body" }
 ]</textarea>
       <button id="start" class="primary">開始測試</button>
-      <p class="hint">支援完整計畫中的 resumeWhen 登入成功條件，以及 goto、click、fill、assertVisible、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
+      <p class="hint">支援 acceptance.method = QA / E2E 驗收條件、resumeWhen 登入成功條件，以及 goto、click、fill、assertVisible、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
+      <h2>QA / E2E 驗收</h2>
+      <p id="qaGate" class="qa-gate" aria-live="polite">尚未設定 QA / E2E 驗收條件</p>
+      <ol id="qaCriteria" class="qa-criteria"></ol>
+      <p class="hint">只有所有必要條件通過，且整體測試已完成，驗收關卡才會通過。登入待接管或未執行不算通過。</p>
       <h2>執行紀錄</h2>
       <ol id="events" class="events"><li>等待啟動…</li></ol>
       <p id="error" class="error" role="alert"></p>
