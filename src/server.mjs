@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { E2EEngine } from './engine.mjs';
+import { loadWorkspace, saveWorkspace, buildProfilePlan } from './workspace.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const baseHeaders = {
@@ -48,6 +49,7 @@ export function createDashboard(engine = new E2EEngine(), { host = '127.0.0.1', 
         res.writeHead(200, { ...baseHeaders, 'Content-Type': filename.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8' });
         return res.end(content);
       }
+      if (req.method === 'GET' && url.pathname === '/api/workspace') return json(res, 200, await loadWorkspace());
       if (req.method === 'GET' && url.pathname === '/api/status') return json(res, 200, engine.status());
       if (req.method === 'GET' && url.pathname === '/api/preview') {
         const screenshot = await engine.preview();
@@ -63,7 +65,15 @@ export function createDashboard(engine = new E2EEngine(), { host = '127.0.0.1', 
         }
         let result;
         switch (url.pathname) {
-          case '/api/start': result = await engine.start(await getJson(req)); break;
+          case '/api/workspace': result = await saveWorkspace(await getJson(req)); break;
+          case '/api/start': {
+            const input = await getJson(req);
+            const plan = input.targetId
+              ? buildProfilePlan(await loadWorkspace(), input)
+              : input;
+            result = await engine.start(plan);
+            break;
+          }
           case '/api/takeover': result = engine.takeover('使用者在控制面板主動接管'); break;
           case '/api/resume': result = await engine.resume(); break;
           case '/api/stop': result = await engine.stop(); break;
