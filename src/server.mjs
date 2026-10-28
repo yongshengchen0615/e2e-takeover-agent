@@ -30,7 +30,7 @@ function json(res, code, data) {
   res.end(JSON.stringify(data));
 }
 
-export function createDashboard(engine = new E2EEngine(), { host = '127.0.0.1', port = 4317 } = {}) {
+export function createDashboard(engine = new E2EEngine(), { host = '127.0.0.1', port = 4317, workspaceFile } = {}) {
   const token = randomBytes(24).toString('hex');
   const server = createServer(async (req, res) => {
     try {
@@ -49,7 +49,7 @@ export function createDashboard(engine = new E2EEngine(), { host = '127.0.0.1', 
         res.writeHead(200, { ...baseHeaders, 'Content-Type': filename.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/css; charset=utf-8' });
         return res.end(content);
       }
-      if (req.method === 'GET' && url.pathname === '/api/workspace') return json(res, 200, await loadWorkspace());
+      if (req.method === 'GET' && url.pathname === '/api/workspace') return json(res, 200, await loadWorkspace(workspaceFile));
       if (req.method === 'GET' && url.pathname === '/api/status') return json(res, 200, engine.status());
       if (req.method === 'GET' && url.pathname === '/api/preview') {
         const screenshot = await engine.preview();
@@ -65,11 +65,11 @@ export function createDashboard(engine = new E2EEngine(), { host = '127.0.0.1', 
         }
         let result;
         switch (url.pathname) {
-          case '/api/workspace': result = await saveWorkspace(await getJson(req)); break;
+          case '/api/workspace': result = await saveWorkspace(await getJson(req), workspaceFile); break;
           case '/api/start': {
             const input = await getJson(req);
             const plan = input.targetId
-              ? buildProfilePlan(await loadWorkspace(), input)
+              ? buildProfilePlan(await loadWorkspace(workspaceFile), input)
               : input;
             result = await engine.start(plan);
             break;
