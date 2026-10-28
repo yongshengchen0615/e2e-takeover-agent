@@ -95,3 +95,18 @@ test('stop during manual pause cancels pending automation', async () => {
   assert.equal(engine.state, 'stopped');
   assert.equal(fake.calls.length, 0);
 });
+
+test('mobile device plan uses isolated mobile emulation context', async () => {
+  let contextSettings;
+  const fake = setup();
+  const browser = await fake.browserFactory();
+  const original = browser.newContext;
+  browser.newContext = async settings => { contextSettings = settings; return original(); };
+  const engine = new E2EEngine({ browserFactory: async () => browser });
+  await engine.start({ baseUrl: 'http://localhost:3000', device: 'mobile', steps: [{ action: 'goto', path: '/' }] });
+  await until(() => engine.state === 'completed');
+  assert.deepEqual(contextSettings.viewport, { width: 390, height: 844 });
+  assert.equal(contextSettings.isMobile, true);
+  await engine.stop();
+  assert.throws(() => validatePlan({ baseUrl: 'http://localhost:3000', device: 'tablet' }), /device/);
+});
