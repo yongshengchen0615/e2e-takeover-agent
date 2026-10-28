@@ -26,6 +26,7 @@
 - 測試計畫可加入 `acceptance: { "method": "QA / E2E", "criteria": [...] }`，每項條件必須對應已執行的斷言步驟。
 - 只有「所有必要條件已通過」且「整體測試狀態 completed」，驗收 Gate 才會顯示 `passed`；人工接管、失敗、停止或未執行都**不算驗收成功**。
 - 新增 `e2e_acceptance` MCP 工具、儀表板 QA / E2E 驗收列表、`artifacts/report.json` 結果與安全摘要。
+- 針對真實 E2E 的報告，可使用 `npm run acceptance:check -- artifacts/report.json` 進行 fail-closed 驗收；沒有通過證據即傳回非零退出碼。
 - MemberWebsocket-dev 的唯讀冒煙計畫已加入四項必要 QA / E2E 驗收。
 - 請參考 `docs/QA_E2E_ACCEPTANCE.md` 的完整驗收格式、範例、判定規則及 GitHub Project #5 權限限制。
 
