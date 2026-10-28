@@ -42,6 +42,21 @@
 - 兩個腳本也可在本機無人值守環境使用：`E2E_ALLOW_REMOTE=1 npm run role:smoke:admin`、`E2E_ALLOW_REMOTE=1 npm run role:smoke:client`。它們只允許結構 profile，不支援自動登入。
 - 此處自動化**不涵蓋** LIFF 身分驗證或管理員角色權限。這些仍須真人測試，且另行確認服務端授權。
 
+## 手機尺寸 RWD 模擬
+
+桌面與手機視窗採固定預設尺寸，不執行可注入的自訂 JS：
+
+| device | 寬 × 高（CSS px） | 模式 |
+|---|---:|---|
+| `desktop` | 1440 × 900 | 桌面 |
+| `mobileSmall` | 360 × 800 | 手機／觸控 |
+| `mobileStandard` | 390 × 844 | 手機／觸控 |
+| `mobileLarge` | 430 × 932 | 手機／觸控 |
+
+在「測試對象／方案」選好管理端或用戶端，再選「畫面尺寸／手機模擬」，點「載入選取的測試方案」即可產生 RWD 驗收 JSON。手機模式會加上必要條件 `RWD-001`，用 `assertNoHorizontalOverflow` 判定頁面在目前 viewport 是否產生橫向溢出。這是**版面基本檢查**，不包含視覺像素比對、排版美觀分數或真實行動裝置的 LINE LIFF 測試。
+
+MCP 範例：`e2e_start_profile({profileId:"client-booking-auth",device:"mobileStandard"})`。
+
 ## MCP 操作範例
 
 - `e2e_profiles`：列出可用方案及各自測試層級與注意事項。
