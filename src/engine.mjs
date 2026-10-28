@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { validateAcceptance, evaluateAcceptance } from './acceptance.mjs';
 
 const allowedActions = new Set(['goto', 'click', 'fill', 'assertVisible', 'assertText', 'assertUrl', 'pauseForLogin']);
 const MAX_STEPS = 80;
@@ -64,7 +65,8 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
       resumeWhen.selector = rule.selector;
     }
   }
-  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen };
+  const acceptance = validateAcceptance(input.acceptance, clean);
+  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen, acceptance };
 }
 
 export class E2EEngine extends EventEmitter {
@@ -93,7 +95,8 @@ export class E2EEngine extends EventEmitter {
     this.emit('update', event);
   }
   status() {
-    return { state: this.state, pauseReason: this.pauseReason, results: this.results, events: this.events, total: this.plan?.steps.length ?? 0 };
+    return { state: this.state, pauseReason: this.pauseReason, results: this.results, events: this.events, total: this.plan?.steps.length ?? 0,
+      acceptance: evaluateAcceptance(this.plan?.acceptance, this.results, this.state) };
   }
   async start(planInput) {
     if (!['idle', 'completed', 'failed', 'stopped'].includes(this.state)) throw new Error('已有執行中的測試；請先結束');
@@ -225,11 +228,13 @@ export class E2EEngine extends EventEmitter {
     try {
       await mkdir(this.artifactsDir, { recursive: true, mode: 0o700 });
       await writeFile(resolve(this.artifactsDir, 'report.json'), JSON.stringify({
-        state: this.state, generatedAt: new Date().toISOString(), results: this.results
+        state: this.state, generatedAt: new Date().toISOString(), results: this.results,
+        acceptance: this.status().acceptance
       }, null, 2), { mode: 0o600 });
     } catch { this.log('warn', '無法輸出本機報告檔'); }
   }
   async stop() {
+    const wasActive = ['starting', 'running', 'manual'].includes(this.state);
     this._cancelled = true;
     const cb = this._resume;
     this._resume = null;
@@ -241,6 +246,7 @@ export class E2EEngine extends EventEmitter {
     this.state = 'stopped';
     this.pauseReason = null;
     this.log('stop', '測試已停止，瀏覽器已關閉');
+    if (wasActive) await this.writeReport();
     return this.status();
   }
 }
