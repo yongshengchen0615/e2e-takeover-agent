@@ -24,13 +24,13 @@
       <h2>測試設定</h2>
       <label for="base">受測網站（預設只允許 localhost）</label>
       <input id="base" type="url" value="http://localhost:3000" spellcheck="false">
-      <label for="steps">步驟 JSON（可修改）</label>
+      <label for="steps">步驟 JSON 陣列／完整測試計畫 JSON（可貼上 config 範例）</label>
       <textarea id="steps" spellcheck="false">[
   { "name": "開啟首頁", "action": "goto", "path": "/" },
   { "name": "確認首頁", "action": "assertVisible", "selector": "body" }
 ]</textarea>
       <button id="start" class="primary">開始測試</button>
-      <p class="hint">支援 goto、click、fill、assertVisible、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
+      <p class="hint">支援完整計畫中的 resumeWhen 登入成功條件，以及 goto、click、fill、assertVisible、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
       <h2>執行紀錄</h2>
       <ol id="events" class="events"><li>等待啟動…</li></ol>
       <p id="error" class="error" role="alert"></p>
