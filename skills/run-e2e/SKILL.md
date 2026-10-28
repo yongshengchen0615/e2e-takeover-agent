@@ -1,6 +1,6 @@
 ---
 name: run-e2e
-description: Run visible website E2E tests with human login takeover and QA/E2E acceptance criteria, evidence and release gates. Use for requests to test web apps, prepare QA acceptance, or verify E2E results.
+description: Run visible website E2E tests with admin/client test profiles, human login takeover, and QA/E2E acceptance criteria. Use to test management or user portals, prepare QA acceptance, or verify web functionality.
 ---
 
 # E2E Takeover Agent
@@ -29,6 +29,16 @@ Use for web app E2E testing when a user needs a visible browser, test steps, hum
 4. Give an acceptance table with ID, requirement, actual evidence, outcome, untested scope and run artifact path. When release gating is requested, run `npm run acceptance:check -- artifacts/report.json` against the real E2E run report; only a verified zero exit code satisfies this local gate, and it does not prove release approval outside covered scope. `artifacts/report.json` is local only; do not claim remote evidence storage or Project status syncing.
 5. For MemberWebsocket-dev the four configured criteria only cover public landing-page and entry links. Do not describe LINE login, Supabase RLS, booking writes or project-wide QA as covered without separate confirmed test runs. GitHub Project #5 item/field access currently returns 403; never claim that status was updated.
 6. Never mark production release ready solely from an incomplete QA/E2E suite; require actual authorized staging E2E and other appropriate security/integration checks.
+
+## Admin/client test configuration and authorization
+
+1. When the user asks to test management/admin and user/member surfaces, call `e2e_profiles` and select the appropriate profile. Never default to testing only the public homepage when real role testing is requested.
+2. Choose `admin-structure` or `client-structure` first for non-destructive *DOM presence* diagnostics. These `assertPresent` checks can pass on logged-out pages and **do not certify login, business functionality, or RLS**.
+3. For actual session UI acceptance, choose `admin-auth`, `client-member-auth`, `client-points-auth`, `client-booking-auth`, `client-event-auth`, or `client-calendar-auth`. Use `e2e_start_profile` with `profileId`; optional `baseUrl` is for an authorized custom staging/local origin.
+4. Each authenticated profile has an explicit `pauseForLogin` and `resumeWhen` on the correct page/visible main view. Do not enter secrets or use a new browser session. After manual login verify acceptance; only actual completed runs can pass QA.
+5. Separate admin and member runs so an admin's browser authorization context cannot be mistaken for a member session; do not use production or user-real transactions for E2E.
+6. Profile source lives in `src/profiles.mjs`; UI profile loader uses `/api/profiles` and `/api/profile?id=...`. User can inspect/adjust the generated JSON before starting. References: `docs/ROLE_TEST_PROFILES.md`.
+7. Preserve old `e2e_start` / custom JSON behavior and do not claim browser E2E success merely because the profile generator or mock tests passed.
 
 ## Failure handling
 
