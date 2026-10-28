@@ -10,8 +10,9 @@ test('repository contains required development and plugin files', async () => {
     'README.md', 'README.zh-TW.md', 'TESTING.md', 'SECURITY.md',
     'CONTRIBUTING.md', '.gitignore', '.github/workflows/ci.yml',
     'plugin.json', 'mcp.json', 'skills/run-e2e/SKILL.md',
-    'src/engine.mjs', 'src/server.mjs', 'src/mcp.mjs',
-    'config/memberwebsocket-dev.smoke.json', 'docs/MEMBERWEBSOCKET_INTEGRATION.md'
+    'src/engine.mjs', 'src/acceptance.mjs', 'src/server.mjs', 'src/mcp.mjs',
+    'config/memberwebsocket-dev.smoke.json', 'docs/MEMBERWEBSOCKET_INTEGRATION.md',
+    'docs/QA_E2E_ACCEPTANCE.md', 'tests/acceptance.test.mjs'
   ];
   await Promise.all(files.map(fileExists));
 });
