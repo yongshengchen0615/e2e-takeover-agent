@@ -32,5 +32,43 @@
       "action": "assertVisible",
       "selector": "nav a[href=\"./admin/\"]"
     }
-  ]
+  ],
+  "acceptance": {
+    "method": "QA / E2E",
+    "criteria": [
+      {
+        "id": "QA-001",
+        "title": "開發站首頁可識別",
+        "required": true,
+        "stepNames": [
+          "確認開發站標題",
+          "確認會員中心導覽存在"
+        ]
+      },
+      {
+        "id": "E2E-001",
+        "title": "會員卡功能入口存在",
+        "required": true,
+        "stepNames": [
+          "確認會員卡入口"
+        ]
+      },
+      {
+        "id": "E2E-002",
+        "title": "預約功能入口存在",
+        "required": true,
+        "stepNames": [
+          "確認預約入口"
+        ]
+      },
+      {
+        "id": "E2E-003",
+        "title": "管理端功能入口存在",
+        "required": true,
+        "stepNames": [
+          "確認管理入口"
+        ]
+      }
+    ]
+  }
 }
