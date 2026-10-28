@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "e2e-takeover-agent",
-  "version": "0.3.0",
-  "description": "可視化 E2E 測試、人工登入接管與恢復，提供 QA / E2E 驗收條件、證據和發布關卡。",
+  "version": "0.4.0",
+  "description": "管理端與用戶端的可視化 E2E 測試，提供測試方案、人工登入接管、QA / E2E 驗收條件與證據。",
   "extensions": {
     "com.openai": {
       "requires_local_executor": true,
