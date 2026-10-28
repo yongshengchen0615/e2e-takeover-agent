@@ -28,6 +28,7 @@
 - 預設方案均為唯讀，不會建立預約、變更會員、領取票券、轉贈點數或寫入 Supabase 資料。
 - 新增 `assertPresent`（可驗證隱藏的 HTML 結構）、強化 `assertVisible` 的載入等待與重複登入接管提示處理。
 - 新增 `e2e_profiles` 與 `e2e_start_profile` MCP 工具，原有 JSON 計畫與 `e2e_start` 仍相容。
+- 新增 GitHub Actions 唯讀 Chromium 角色檢查（`role-smoke.yml`），獨立驗證管理端與用戶端結構，附 QA 報告；不能取代登入後 E2E。
 - 詳細覆蓋與限制：`docs/ROLE_TEST_PROFILES.md`。
 
 **使用**：本機啟動儀表板 → 選「管理端｜頁面結構」或「用戶端｜會員卡登入後驗收」等 → 載入方案 → 核對受測網址與測試 JSON → 開始測試。對 Netlify staging 必須顯式開啟 `E2E_ALLOW_REMOTE=1`。
