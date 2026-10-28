@@ -1,4 +1,4 @@
-# E2E Takeover Agent — v0.2.0（專案化測試設計）
+# E2E Takeover Agent — v0.3.0（QA / E2E 驗收關卡）
 
 針對 **Web 專案**的可見 Playwright E2E 測試工具。當需要登入、雙重驗證或第三方登入時，交還操控權讓使用者直接操作同一個 Chromium 瀏覽器視窗，完成登入後恢復後續測試。
 
@@ -20,6 +20,14 @@
 - 專案對應、風險與後續測試矩陣：`docs/MEMBERWEBSOCKET_INTEGRATION.md`。
 
 **注意**：既有的本機控制介面可視化，並不代表 ChatGPT 網頁或手機可以直接接管遠端瀏覽器。
+
+## v0.3.0 新增：QA / E2E 驗收
+
+- 測試計畫可加入 `acceptance: { "method": "QA / E2E", "criteria": [...] }`，每項條件必須對應已執行的斷言步驟。
+- 只有「所有必要條件已通過」且「整體測試狀態 completed」，驗收 Gate 才會顯示 `passed`；人工接管、失敗、停止或未執行都**不算驗收成功**。
+- 新增 `e2e_acceptance` MCP 工具、儀表板 QA / E2E 驗收列表、`artifacts/report.json` 結果與安全摘要。
+- MemberWebsocket-dev 的唯讀冒煙計畫已加入四項必要 QA / E2E 驗收。
+- 請參考 `docs/QA_E2E_ACCEPTANCE.md` 的完整驗收格式、範例、判定規則及 GitHub Project #5 權限限制。
 
 ## 安裝（在你自己的桌上型電腦）
 
@@ -66,7 +74,7 @@ $env:E2E_ALLOW_REMOTE="1"; npm start
 
 `plugin.json` 是 Agent Plugins 的可攜 Manifest；`mcp.json` 設定本地 `stdio` MCP server。若在允許本地 MCP 程序的 Agent/桌面環境使用，請先完成 `npm install` 與 Chromium 安裝，然後由支援 local executor 的客戶端啟動此外掛。此 ZIP **不能直接讓 ChatGPT 網頁版控制你的本機電腦**；需要客戶端、權限、MCP 連線與安裝驗證。
 
-暴露工具：`e2e_open_dashboard`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`。若只是要使用儀表板，完全不需連 MCP。
+暴露工具：`e2e_open_dashboard`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`、`e2e_acceptance`。若只是要使用儀表板，完全不需連 MCP。
 
 ## 安全性
 
