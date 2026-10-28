@@ -1,5 +1,6 @@
 // Non-destructive presets grounded in MemberWebsocket-dev's published HTML.
 // "structure" checks DOM scaffolding, not user authorization or API success.
+import { validateDevice } from './devices.mjs';
 const DEFAULT_BASE_URL = 'https://memberwebsocket-dev-netlify.netlify.app';
 const profileSpecs = [
   { id: 'admin-structure', label: '管理端｜頁面結構', audience: 'admin', level: 'structure', path: '/admin/',
@@ -36,14 +37,16 @@ export function listProfiles() {
   return profileSpecs.map(({id,label,audience,level,note}) => ({id,label,audience,level,note}));
 }
 
-export function createProfilePlan(id, { baseUrl = DEFAULT_BASE_URL } = {}) {
+export function createProfilePlan(id, { baseUrl = DEFAULT_BASE_URL, device = 'desktop' } = {}) {
   const spec = profileSpecs.find(x => x.id === id);
   if (!spec) throw new Error('找不到指定的管理端／用戶端測試範本');
   if (typeof baseUrl !== 'string' || !baseUrl.trim()) throw new Error('baseUrl 不合法');
+  const selectedDevice = validateDevice(device);
   const steps = [
     { name: '進入測試頁', action: 'goto', path: spec.path },
     ...(spec.level === 'authenticated' ? [{ name: '人工確認登入', action: 'pauseForLogin' }] : []),
-    ...assertSteps(spec)
+    ...assertSteps(spec),
+    ...(selectedDevice.isMobile ? [{name:'手機版無橫向溢出', action:'assertNoHorizontalOverflow'}] : [])
   ];
   const acceptance = {
     method: 'QA / E2E',
@@ -53,8 +56,12 @@ export function createProfilePlan(id, { baseUrl = DEFAULT_BASE_URL } = {}) {
       required: true, stepNames: [title]
     }))
   };
+  if (selectedDevice.isMobile) acceptance.criteria.push({
+    id: 'RWD-001', title: '手機畫面無橫向溢出', required: true, stepNames: ['手機版無橫向溢出']
+  });
   return {
     baseUrl,
+    device: selectedDevice.id,
     profileId: id,
     audience: spec.audience,
     level: spec.level,
