@@ -4,6 +4,10 @@
 
 **專案狀態：v0.1.0 開發中（MVP）**。本儲存庫包含本機測試引擎、瀏覽器即時預覽儀表板、MCP 介面及測試案例。**目前不是直接在 ChatGPT 聊天畫面內操控瀏覽器的遠端服務。**
 
+## 直接在雲端測試管理端（不用 localhost）
+
+已提供不需任何 Browserbase / Render 金鑰的 [GitHub Actions 一鍵遠端 E2E](https://github.com/yongshengchen0615/e2e-takeover-agent/actions/workflows/remote-e2e.yml)：點 **Run workflow**，已預填 Netlify 管理端 `https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app/admin/?business=test`；用戶端網址可選填。GitHub 雲端 Chromium 會執行唯讀載入測試並提供結果報告，無須本機 localhost。**GitHub Actions 暫不支援登入人工接管及即時畫面**；完整互動雲端瀏覽器仍需部署 Browserbase 服務。見 [完整操作手冊](docs/REMOTE-E2E-QUICKSTART.md)。
+
 ## 快速開始
 
 需求：Node.js 20+、圖形桌面、可下載 npm 套件與 Chromium。
