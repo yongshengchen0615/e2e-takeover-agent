@@ -1,4 +1,4 @@
-# E2E Takeover Agent — v0.1.0 MVP
+# E2E Takeover Agent — v0.2.0（專案化測試設計）
 
 針對 **Web 專案**的可見 Playwright E2E 測試工具。當需要登入、雙重驗證或第三方登入時，交還操控權讓使用者直接操作同一個 Chromium 瀏覽器視窗，完成登入後恢復後續測試。
 
@@ -11,6 +11,15 @@
 - 人工接管期間不擷取預覽截圖，使用者可在 Chromium 視窗操作；按「登入完成，繼續」後檢查離開登入畫面，從原本步驟接續
 - 結果輸出到 `artifacts/report.json`；不存 Cookie、不存登入憑證、不擷取登入時的 Trace
 - MCP `stdio` 工具與 Agent Plugins `plugin.json`/`mcp.json`/`skills` 封裝
+
+## v0.2.0 新增
+
+- `resumeWhen`：人工接管恢復之前可指定**登入後路徑**及／或**登入後可見元件**，避免只靠離開登入網址就視為成功。若兩者皆指定，必須同時符合。無設定時仍保留原版啟發式行為。
+- 儀表板可貼上**完整測試計畫 JSON**（含 baseUrl、steps、resumeWhen），也可沿用原本的步驟陣列。
+- `config/memberwebsocket-dev.smoke.json`：Netlify MemberWebsocket 開發入口唯讀冒煙測試，需手動允許遠端測試；**尚未宣稱真實站點測試通過**。
+- 專案對應、風險與後續測試矩陣：`docs/MEMBERWEBSOCKET_INTEGRATION.md`。
+
+**注意**：既有的本機控制介面可視化，並不代表 ChatGPT 網頁或手機可以直接接管遠端瀏覽器。
 
 ## 安裝（在你自己的桌上型電腦）
 
