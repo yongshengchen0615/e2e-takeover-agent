@@ -22,15 +22,21 @@
     </section>
     <aside>
       <h2>測試設定</h2>
-      <label for="base">受測網站（預設只允許 localhost）</label>
+      <label for="preset">測試對象／方案</label>
+      <select id="preset" aria-describedby="presetInfo">
+        <option value="">自訂 JSON 測試計畫</option>
+      </select>
+      <button type="button" id="loadPreset" class="secondary preset-button">載入選取的測試方案</button>
+      <p id="presetInfo" class="hint" role="status">可選管理端或用戶端；畫面結構檢查不代表已登入。登入後驗收會交由你在 Chromium 視窗操作。</p>
+      <label for="base">受測網站（載入方案時同步；遠端須明確允許）</label>
       <input id="base" type="url" value="http://localhost:3000" spellcheck="false">
-      <label for="steps">步驟 JSON 陣列／完整測試計畫 JSON（可貼上 config 範例）</label>
+      <label for="steps">測試計畫 JSON（可調整各項驗收條件）</label>
       <textarea id="steps" spellcheck="false">[
   { "name": "開啟首頁", "action": "goto", "path": "/" },
   { "name": "確認首頁", "action": "assertVisible", "selector": "body" }
 ]</textarea>
       <button id="start" class="primary">開始測試</button>
-      <p class="hint">支援 acceptance.method = QA / E2E 驗收條件、resumeWhen 登入成功條件，以及 goto、click、fill、assertVisible、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
+      <p class="hint">唯讀畫面結構使用 assertPresent（不要求已登入）；登入後驗收使用可見元件斷言。支援 acceptance.method = QA / E2E 驗收條件、resumeWhen 登入成功條件，以及 goto、click、fill、assertVisible、assertPresent、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
       <h2>QA / E2E 驗收</h2>
       <p id="qaGate" class="qa-gate" aria-live="polite">尚未設定 QA / E2E 驗收條件</p>
       <ol id="qaCriteria" class="qa-criteria"></ol>
