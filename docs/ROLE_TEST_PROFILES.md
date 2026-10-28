@@ -32,6 +32,16 @@
 6. `resumeWhen` 會確認對應站內路徑及登入後的主容器可見，否則仍為 manual。之後檢查全部必要條件，將 `artifacts/report.json` 的 Gate 記錄為 passed/failed/blocked。
 7. 運行 `npm run acceptance:check -- artifacts/report.json` 核對當次測試是否有完整通過證據。**不要使用單元測試產生的合成報告來宣稱目標網站通過 E2E**。
 
+## GitHub Actions 真實 Chromium 唯讀 E2E
+
+`.github/workflows/role-smoke.yml` 以 **Playwright headless Chromium** 分別執行 `admin-structure`、`client-structure`。該流程只做遠端頁面載入和 DOM 元素存在驗證，**不登入、不寫入、不操控會員資料**。
+
+- PR 修改引擎、角色方案或 workflow 時會自動執行；也可由 GitHub Actions 頁面使用 `workflow_dispatch` 手動啟動。
+- 每個角色上傳一份獨立 `artifacts/<profileId>/report.json`，方便 QA 查閱。GitHub Actions artifact 保存 7 天。
+- 遇到需要真人登入的轉址時，CI **不得自動恢復**，這個角色測試會標記阻塞並失敗。
+- 兩個腳本也可在本機無人值守環境使用：`E2E_ALLOW_REMOTE=1 npm run role:smoke:admin`、`E2E_ALLOW_REMOTE=1 npm run role:smoke:client`。它們只允許結構 profile，不支援自動登入。
+- 此處自動化**不涵蓋** LIFF 身分驗證或管理員角色權限。這些仍須真人測試，且另行確認服務端授權。
+
 ## MCP 操作範例
 
 - `e2e_profiles`：列出可用方案及各自測試層級與注意事項。
