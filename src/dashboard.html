@@ -26,6 +26,14 @@
       <select id="preset" aria-describedby="presetInfo">
         <option value="">自訂 JSON 測試計畫</option>
       </select>
+      <label for="device">畫面尺寸／手機模擬</label>
+      <select id="device" aria-describedby="deviceInfo">
+        <option value="desktop">桌面 1440 × 900</option>
+        <option value="mobileSmall">小手機 360 × 800</option>
+        <option value="mobileStandard">手機 390 × 844</option>
+        <option value="mobileLarge">大手機 430 × 932</option>
+      </select>
+      <p id="deviceInfo" class="hint">手機模式會設定 Chromium viewport、觸控與手機 CSS 媒體查詢，加入橫向溢出驗收；不等於真實手機上的 LINE LIFF。</p>
       <button type="button" id="loadPreset" class="secondary preset-button">載入選取的測試方案</button>
       <p id="presetInfo" class="hint" role="status">可選管理端或用戶端；畫面結構檢查不代表已登入。登入後驗收會交由你在 Chromium 視窗操作。</p>
       <label for="base">受測網站（載入方案時同步；遠端須明確允許）</label>
