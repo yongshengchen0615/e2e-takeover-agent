@@ -10,6 +10,17 @@
 - [ ] 在實際目標 Web 專案執行完整 E2E 驗收
 - [ ] 完成目標 ChatGPT／Agent 客戶端的安裝連線驗收
 
+## v0.4.0 — 管理端／用戶端測試設定（開發分支）
+
+- [x] 管理端與用戶端的 8 組專案測試方案（2 組頁面結構，6 組人工登入驗收）
+- [x] 儀表板選擇／載入測試方案，支援自訂測試網址
+- [x] MCP 測試方案列出及直接執行
+- [x] `assertPresent` 結構驗證、`assertVisible` 載入等待、重複接管提示避免
+- [x] 測試方案均不包含會寫資料的 click / fill
+- [ ] 真實 Netlify 管理端與用戶端完整登入驗收
+- [ ] 真實 LINE App LIFF／管理員權限／Supabase RLS E2E
+- [ ] ChatGPT 外掛本機 executor 安裝驗證
+
 ## v0.3.0 — QA / E2E 驗收（開發分支）
 
 - [x] 驗收方案 `acceptance.method = "QA / E2E"` 與條件驗證
