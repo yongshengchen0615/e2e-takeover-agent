@@ -21,7 +21,7 @@ const dashboardUrl = () => {
 };
 function requireCloudCredentials() {
   if (!process.env.BROWSERBASE_API_KEY) {
-    throw new Error('雲端測試需要 BROWSERBASE_API_KEY；請在雲端執行環境設定 Browserbase 機密，不需 E2E_ALLOW_REMOTE。');
+    throw new Error('雲端測試需要 BROWSERBASE_API_KEY；請在雲端執行環境設定 Browserbase 機密。');
   }
   if (!process.env.BROWSERBASE_PROJECT_ID) {
     throw new Error('雲端測試需要 BROWSERBASE_PROJECT_ID；請在雲端執行環境設定 Browserbase 專案 ID。');
