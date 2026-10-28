@@ -21,6 +21,14 @@
 
 **注意**：既有的本機控制介面可視化，並不代表 ChatGPT 網頁或手機可以直接接管遠端瀏覽器。
 
+## GitHub Project #5 關聯
+
+本外掛程式碼儲存庫：[e2e-takeover-agent](https://github.com/yongshengchen0615/e2e-takeover-agent)。
+目標管理看板：[Project #5 · 01｜開發看板](https://github.com/users/yongshengchen0615/projects/5/views/3)（另有 [QA 驗收視圖](https://github.com/users/yongshengchen0615/projects/5/views/6)）。
+開發追蹤：[Pull Request #1](https://github.com/yongshengchen0615/e2e-takeover-agent/pull/1)。
+
+**看板連結尚未完成**：2026-10-28 嘗試透過 GitHub Projects 外掛直接加入 PR #1 時，收到 `Resource not accessible by integration`（403）。待 Projects 權限開啟後，才能完成 PR 卡片新增、驗收欄位同步；以上連結只是交叉參照，並不代表已新增看板項目。
+
 ## v0.5.0 — 手機畫面模擬與 RWD 測試
 
 - 儀表板新增 **畫面尺寸／手機模擬** 下拉選單：桌面 1440×900、小手機 360×800、標準手機 390×844、大手機 430×932。
