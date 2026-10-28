@@ -22,6 +22,7 @@ export function quickPlans(input, allowedOrigins) {
         device: target.device,
         steps: [
           { name: '開啟頁面', action: 'goto', path: url.pathname + url.search },
+          ...(input.login === true ? [{ name: '人工 LINE／測試帳號登入', action: 'pauseForLogin' }] : []),
           { name: '確認頁面可見', action: 'assertVisible', selector: 'body' }
         ]
       }
