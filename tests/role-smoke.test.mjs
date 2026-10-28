@@ -8,6 +8,10 @@ test('headless role runner refuses authenticated or unapproved remote testing', 
     encoding:'utf8',
     env:{...process.env, ...env}
   });
+  const invalidSize=spawnSync(process.execPath, [resolve('src/run-role-smoke.mjs'),'admin-structure','arbitrary-width'], {
+    encoding:'utf8',env:{...process.env,E2E_ALLOW_REMOTE:'1'}
+  });
+  assert.equal(invalidSize.status,2);
   const invalid=exec('admin-auth',{E2E_ALLOW_REMOTE:'1'});
   assert.equal(invalid.status,2);
   assert.match(invalid.stderr,/只允許唯讀/);
