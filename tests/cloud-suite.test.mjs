@@ -65,3 +65,15 @@ test('optional LINE/test-account login pauses each target before assertions', ()
     assert.deepEqual(p.plan.steps.map(s => s.action), ['goto', 'pauseForLogin', 'assertVisible']);
   }
 });
+
+
+test('management URL preserves /admin/ and business=test query for navigation', () => {
+  const adminUrl = 'https://integrated-marketing-platform--memberwebsocket-dev-netlify.netlify.app/admin/?business=test';
+  const origin = new URL(adminUrl).origin;
+  const plans = quickPlans({
+    adminUrl,
+    clientUrls: 'https://app.example.com/'
+  }, [origin, 'https://app.example.com']);
+  assert.equal(plans[0].plan.baseUrl, origin);
+  assert.equal(plans[0].plan.steps[0].path, '/admin/?business=test');
+});
