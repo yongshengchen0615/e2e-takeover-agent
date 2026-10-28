@@ -15,6 +15,8 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
   if (!allowRemote && !['localhost', '127.0.0.1', '[::1]'].includes(baseUrl.hostname)) {
     throw new Error('預設僅允許 localhost；遠端測試需由使用者在自己的電腦設定 E2E_ALLOW_REMOTE=1');
   }
+  const device = input.device ?? 'desktop';
+  if (!['desktop', 'mobile'].includes(device)) throw new Error('device 必須是 desktop 或 mobile');
   const steps = input.steps ?? [
     { name: '開啟首頁', action: 'goto', path: '/' },
     { name: '首頁可見', action: 'assertVisible', selector: 'body' }
@@ -41,7 +43,7 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
     if (s.action === 'assertUrl') requireString('path');
     return step;
   });
-  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean };
+  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, device, steps: clean };
 }
 
 export class E2EEngine extends EventEmitter {
@@ -83,7 +85,9 @@ export class E2EEngine extends EventEmitter {
     this.log('info', '啟動可見瀏覽器，準備進行測試');
     try {
       this.browser = await this.browserFactory();
-      this.context = await this.browser.newContext();
+      this.context = await this.browser.newContext(this.plan.device === 'mobile'
+        ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }
+        : { viewport: { width: 1440, height: 900 } });
       this.page = await this.context.newPage();
       this.state = 'running';
       this.log('info', '測試開始');
