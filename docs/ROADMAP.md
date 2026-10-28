@@ -10,6 +10,17 @@
 - [ ] 在實際目標 Web 專案執行完整 E2E 驗收
 - [ ] 完成目標 ChatGPT／Agent 客戶端的安裝連線驗收
 
+## v0.3.0 — QA / E2E 驗收（開發分支）
+
+- [x] 驗收方案 `acceptance.method = "QA / E2E"` 與條件驗證
+- [x] 每條驗收需引用至少一個真實斷言
+- [x] `passed/failed/blocked/in_progress/not_run/incomplete` 驗收關卡
+- [x] 儀表板與 MCP 查詢 QA 驗收結果
+- [x] 報告輸出驗收證據、四項 MemberWebsocket 唯讀冒煙驗收
+- [ ] GitHub CI 驗證 v0.3.0 測試
+- [ ] 真實 Netlify 站台、登入接管與後端驗收
+- [ ] GitHub Project #5 items/fields 403 授權後再評估同步
+
 ## v0.2.0（進行中）
 
 - [x] `resumeWhen` 登入後 path/selector 驗證與對應單元測試（程式碼已寫入待驗證分支）
