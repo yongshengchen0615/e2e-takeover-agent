@@ -1,6 +1,7 @@
 import { createInterface } from 'node:readline';
 import { E2EEngine } from './engine.mjs';
 import { createDashboard } from './server.mjs';
+import { loadWorkspace, buildProfilePlan } from './workspace.mjs';
 
 const engine = new E2EEngine();
 const dashboard = createDashboard(engine, { port: 0 });
@@ -11,7 +12,8 @@ function reply(id, payload, error = false) {
 }
 const toolDefs = [
   { name: 'e2e_open_dashboard', description: '開啟本機 E2E 即時測試控制台並取得其網址。僅允許本機瀏覽器存取。', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
-  { name: 'e2e_start', description: '在可見 Chromium 中開始網站 E2E 測試。預設僅允許 localhost；需要人工登入時自動暫停。', inputSchema: { type: 'object', required: ['baseUrl'], properties: { baseUrl: { type: 'string' }, steps: { type: 'array', items: { type: 'object' } } }, additionalProperties: false } },
+  { name: 'e2e_profiles', description: '取得已設定的管理端／多用戶端與可選擇的 LINE／測試帳號身分（不含密碼）。', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
+  { name: 'e2e_start', description: '選擇 targetId 和可選的 accountId 開始測試；也支援舊版 baseUrl。LINE 與測試帳密都由使用者在 Chromium 手動登入。', inputSchema: { type: 'object', properties: { targetId: { type: 'string' }, accountId: { type: 'string' }, baseUrl: { type: 'string' }, device: { type: 'string', enum: ['desktop', 'mobile'] }, steps: { type: 'array', items: { type: 'object' } } }, additionalProperties: false } },
   { name: 'e2e_status', description: '取得執行狀態、步驟結果、人工接管狀態與本機儀表板網址。', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
   { name: 'e2e_takeover', description: '應使用者要求暫停後續操作並交還瀏覽器控制權。', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
   { name: 'e2e_resume', description: '使用者明確表示已完成登入時，檢查登入頁已離開後恢復同一瀏覽器工作階段。', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
@@ -21,7 +23,8 @@ async function callTool(name, args) {
   if (!dashboardUrl) dashboardUrl = await dashboard.listen();
   switch (name) {
     case 'e2e_open_dashboard': return { dashboardUrl, status: engine.status() };
-    case 'e2e_start': return { dashboardUrl, status: await engine.start(args) };
+    case 'e2e_profiles': return { dashboardUrl, status: engine.status(), workspace: await loadWorkspace() };
+    case 'e2e_start': return { dashboardUrl, status: await engine.start(args.targetId ? buildProfilePlan(await loadWorkspace(), args) : args) };
     case 'e2e_status': return { dashboardUrl, status: engine.status() };
     case 'e2e_takeover': return { dashboardUrl, status: engine.takeover('使用者要求接管') };
     case 'e2e_resume': return { dashboardUrl, status: await engine.resume() };
@@ -34,7 +37,7 @@ async function handle(msg) {
   try {
     switch(msg.method) {
       case 'initialize':
-        reply(msg.id, { protocolVersion: msg.params?.protocolVersion || '2025-06-18', capabilities: { tools: { listChanged: false } }, serverInfo: { name: 'e2e-takeover-agent', version: '0.1.0' } });
+        reply(msg.id, { protocolVersion: msg.params?.protocolVersion || '2025-06-18', capabilities: { tools: { listChanged: false } }, serverInfo: { name: 'e2e-takeover-agent', version: '0.2.0' } });
         break;
       case 'notifications/initialized': break;
       case 'ping': reply(msg.id, {}); break;
