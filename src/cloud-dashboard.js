@@ -13,7 +13,7 @@ async function post(route, body) {
 $('start').onclick = async () => {
   try {
     notify();
-    await post('quick-start', { adminUrl: $('admin').value.trim(), clientUrls: $('clients').value, mobile: $('mobile').checked });
+    await post('quick-start', { adminUrl: $('admin').value.trim(), clientUrls: $('clients').value, mobile: $('mobile').checked, login: $('login').checked });
     await refresh();
   } catch(e) { notify(e.message); }
 };
