@@ -84,3 +84,42 @@ test('cloud Basic Auth only accepts configured account with timing-safe password
   assert.equal(check('Bearer abc'), false);
   assert.throws(() => createBasicAuth('admin','short'), /24/);
 });
+
+test('cloud minimal dashboard exposes URL inputs, not mandatory JSON/profile editor', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../src/cloud-dashboard.html', import.meta.url), 'utf8');
+  assert.match(html, /id="admin"/);
+  assert.match(html, /id="clients"/);
+  assert.match(html, /id="start"/);
+  assert.match(html, /id="login"/);
+  assert.doesNotMatch(html, /id="steps"/);
+});
+
+test('cloud quick-start API accepts simple URLs after admin authentication and CSRF', async () => {
+  const { mkdtemp, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = await mkdtemp(join(tmpdir(), 'e2e-cloud-api-'));
+  let input;
+  const engine = {
+    status: () => ({ state: 'idle', results: [], events: [] }),
+    start: async data => { input = data; return { state: 'running' }; },
+    stop: async () => ({ state: 'stopped' }),
+    preview: async () => null
+  };
+  const secret = 'very-long-secret-for-api-tests-1234';
+  const app = createCloudDashboard(engine, { host: '127.0.0.1', port: 0, username: 'admin', password: secret, workspaceFile: join(root,'data.json') });
+  const url = await app.listen();
+  const authorization = 'Basic ' + Buffer.from('admin:' + secret).toString('base64');
+  try {
+    const page = await (await fetch(url, { headers: { Authorization: authorization } })).text();
+    const csrf = page.match(/data-token="([0-9a-f]+)"/)?.[1];
+    const res = await fetch(url + '/api/quick-start', {
+      method: 'POST',
+      headers: { Authorization: authorization, 'x-e2e-token': csrf, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminUrl: 'https://admin.example.com', clientUrls: 'https://app.example.com' })
+    });
+    assert.equal(res.status, 200);
+    assert.deepEqual(input, { adminUrl: 'https://admin.example.com', clientUrls: 'https://app.example.com' });
+  } finally { await app.close(); await rm(root,{recursive:true,force:true}); }
+});
