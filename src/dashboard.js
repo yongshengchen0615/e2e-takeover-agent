@@ -35,6 +35,18 @@ async function refresh() {
     $('takeover').disabled = data.state !== 'running';
     $('resume').disabled = data.state !== 'manual';
     $('stop').disabled = ['idle','stopped'].includes(data.state);
+    const qa = data.acceptance;
+    const qaLabels = { passed: '通過', failed: '失敗', blocked: '阻塞', in_progress: '進行中', not_run: '未執行', incomplete: '未完成' };
+    $('qaGate').textContent = qa
+      ? `QA / E2E 驗收：${qaLabels[qa.gate] || qa.gate}（${qa.summary.passed}/${qa.criteria.length} 項已通過）`
+      : '未設定 QA / E2E 驗收條件（不可視為已驗收）';
+    $('qaGate').dataset.gate = qa?.gate || 'not_configured';
+    $('qaCriteria').replaceChildren(...(qa?.criteria || []).map(item => {
+      const li = document.createElement('li');
+      li.dataset.status = item.status;
+      li.textContent = `${item.id} · ${item.title}｜${qaLabels[item.status] || item.status}${item.required ? '（必要）' : '（選用）'}`;
+      return li;
+    }));
     $('events').replaceChildren(...data.events.slice(-100).reverse().map(event => {
       const li = document.createElement('li');
       li.className = event.type;
