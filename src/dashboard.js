@@ -14,9 +14,11 @@ async function post(route, value) {
 }
 $('start').onclick = async () => {
   try {
-    const baseUrl = $('base').value;
-    const steps = JSON.parse($('steps').value);
-    await post('start', { baseUrl, steps });
+    const input = JSON.parse($('steps').value);
+    const plan = Array.isArray(input) ? { baseUrl: $('base').value, steps: input } : input;
+    if (!plan || typeof plan !== 'object' || Array.isArray(plan)) throw new Error('請填寫步驟陣列或完整測試計畫物件');
+    if (typeof plan.baseUrl === 'string') $('base').value = plan.baseUrl;
+    await post('start', plan);
     await refresh();
   } catch(err) { message(`JSON 格式錯誤：${err.message}`); }
 };
