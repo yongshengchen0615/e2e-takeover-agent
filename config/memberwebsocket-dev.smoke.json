@@ -1,0 +1,36 @@
+{
+  "baseUrl": "https://memberwebsocket-dev-netlify.netlify.app",
+  "steps": [
+    {
+      "name": "開啟 MemberWebsocket 開發入口",
+      "action": "goto",
+      "path": "/"
+    },
+    {
+      "name": "確認開發站標題",
+      "action": "assertText",
+      "selector": "main h1",
+      "text": "Supabase 測試站"
+    },
+    {
+      "name": "確認會員中心導覽存在",
+      "action": "assertVisible",
+      "selector": "nav[aria-label=\"會員中心入口\"]"
+    },
+    {
+      "name": "確認會員卡入口",
+      "action": "assertVisible",
+      "selector": "nav a[href=\"./member/\"]"
+    },
+    {
+      "name": "確認預約入口",
+      "action": "assertVisible",
+      "selector": "nav a[href=\"./booking/\"]"
+    },
+    {
+      "name": "確認管理入口",
+      "action": "assertVisible",
+      "selector": "nav a[href=\"./admin/\"]"
+    }
+  ]
+}
