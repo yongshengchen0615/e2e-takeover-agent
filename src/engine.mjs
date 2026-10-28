@@ -41,7 +41,30 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
     if (s.action === 'assertUrl') requireString('path');
     return step;
   });
-  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean };
+  let resumeWhen;
+  if (input.resumeWhen !== undefined) {
+    const rule = input.resumeWhen;
+    if (!rule || typeof rule !== 'object' || Array.isArray(rule) ||
+        !Object.keys(rule).length || Object.keys(rule).some(k => !['path', 'selector'].includes(k))) {
+      throw new Error('resumeWhen 僅接受 path 或 selector 作為登入成功條件');
+    }
+    resumeWhen = {};
+    if (rule.path !== undefined) {
+      if (typeof rule.path !== 'string' || !rule.path.startsWith('/') || rule.path.startsWith('//') || rule.path.length > 500) {
+        throw new Error('resumeWhen.path 必須是站內絕對路徑');
+      }
+      const target = new URL(rule.path, baseUrl);
+      if (target.origin !== baseUrl.origin) throw new Error('resumeWhen.path 不可跨來源');
+      resumeWhen.path = target.pathname;
+    }
+    if (rule.selector !== undefined) {
+      if (typeof rule.selector !== 'string' || !rule.selector.trim() || rule.selector.length > 300) {
+        throw new Error('resumeWhen.selector 必須是有效 CSS selector');
+      }
+      resumeWhen.selector = rule.selector;
+    }
+  }
+  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen };
 }
 
 export class E2EEngine extends EventEmitter {
@@ -125,6 +148,12 @@ export class E2EEngine extends EventEmitter {
   async resume() {
     if (this.state !== 'manual') throw new Error('測試尚未進入人工接管狀態');
     if (await this.needsLogin()) throw new Error('尚未確認返回受測網站的登入後頁面，請先完成登入並返回原網站');
+    if (this.plan.resumeWhen?.path && new URL(this.page.url()).pathname !== this.plan.resumeWhen.path) {
+      throw new Error('尚未到達設定的登入後路徑，測試仍維持人工接管');
+    }
+    if (this.plan.resumeWhen?.selector && !(await this.page.locator(this.plan.resumeWhen.selector).isVisible())) {
+      throw new Error('登入後指定元件尚未顯示，測試仍維持人工接管');
+    }
     this.state = 'running';
     this.pauseReason = null;
     this.log('resume', '使用者已交還控制權；同一瀏覽器工作階段恢復測試');
