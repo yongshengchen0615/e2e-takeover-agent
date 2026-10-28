@@ -3,7 +3,7 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { validateAcceptance, evaluateAcceptance } from './acceptance.mjs';
 
-const allowedActions = new Set(['goto', 'click', 'fill', 'assertVisible', 'assertText', 'assertUrl', 'pauseForLogin']);
+const allowedActions = new Set(['goto', 'click', 'fill', 'assertVisible', 'assertPresent', 'assertText', 'assertUrl', 'pauseForLogin']);
 const MAX_STEPS = 80;
 const sensitiveSelector = /password|passcode|otp|2fa|secret|token|credential|verification.code/i;
 const safeError = err => String(err?.message ?? err).split('\n')[0].replace(/https?:\/\/\S+/g, '[URL 已隱藏]').slice(0, 200);
@@ -33,7 +33,7 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
       const target = new URL(step.path, baseUrl);
       if (target.origin !== baseUrl.origin || target.username || target.password) throw new Error('禁止跨來源自動導向；第三方登入請使用人工接管');
     }
-    if (['click', 'fill', 'assertVisible', 'assertText'].includes(s.action)) requireString('selector');
+    if (['click', 'fill', 'assertVisible', 'assertPresent', 'assertText'].includes(s.action)) requireString('selector');
     if (s.action === 'fill') {
       requireString('value');
       if (sensitiveSelector.test(s.selector)) throw new Error('敏感資訊請透過人工接管輸入，不得使用 fill 填寫密碼／OTP／權杖');
@@ -66,7 +66,10 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
     }
   }
   const acceptance = validateAcceptance(input.acceptance, clean);
-  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen, acceptance };
+  const profileId = typeof input.profileId === 'string' && /^[a-z0-9-]{1,60}$/.test(input.profileId) ? input.profileId : undefined;
+  const audience = ['admin','client'].includes(input.audience) ? input.audience : undefined;
+  const level = ['structure','authenticated'].includes(input.level) ? input.level : undefined;
+  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean, resumeWhen, acceptance, profileId, audience, level };
 }
 
 export class E2EEngine extends EventEmitter {
@@ -87,6 +90,7 @@ export class E2EEngine extends EventEmitter {
     this.pauseReason = null;
     this._resume = null;
     this._cancelled = false;
+    this._autoHandoffForNextPause = false;
   }
   log(type, message) {
     const event = { at: new Date().toISOString(), type, message };
@@ -96,6 +100,7 @@ export class E2EEngine extends EventEmitter {
   }
   status() {
     return { state: this.state, pauseReason: this.pauseReason, results: this.results, events: this.events, total: this.plan?.steps.length ?? 0,
+      profile: this.plan ? { id: this.plan.profileId ?? null, audience: this.plan.audience ?? null, level: this.plan.level ?? null } : null,
       acceptance: evaluateAcceptance(this.plan?.acceptance, this.results, this.state) };
   }
   async start(planInput) {
@@ -105,6 +110,7 @@ export class E2EEngine extends EventEmitter {
     this.results = [];
     this.events = [];
     this._cancelled = false;
+    this._autoHandoffForNextPause = false;
     this.state = 'starting';
     this.log('info', '啟動可見瀏覽器，準備進行測試');
     try {
@@ -173,11 +179,25 @@ export class E2EEngine extends EventEmitter {
     if (this._cancelled) throw new Error('測試已停止');
   }
   async runStep(s) {
+    if (s.action !== 'pauseForLogin') this._autoHandoffForNextPause = false;
     switch (s.action) {
       case 'goto': await this.page.goto(new URL(s.path, this.plan.baseUrl).toString(), { waitUntil: 'domcontentloaded', timeout: 20000 }); break;
       case 'click': await this.page.locator(s.selector).click({ timeout: 8000 }); break;
       case 'fill': await this.page.locator(s.selector).fill(s.value, { timeout: 8000 }); break;
-      case 'assertVisible': if (!(await this.page.locator(s.selector).isVisible())) throw new Error('指定元件不可見'); break;
+      case 'assertVisible': {
+        const locator = this.page.locator(s.selector);
+        if (typeof locator.waitFor === 'function') {
+          await locator.waitFor({ state: 'visible', timeout: 12000 });
+        } else if (!(await locator.isVisible())) {
+          throw new Error('指定元件不可見');
+        }
+        break;
+      }
+      case 'assertPresent': {
+        const locator = this.page.locator(s.selector);
+        if (typeof locator.count !== 'function' || (await locator.count()) < 1) throw new Error('指定 DOM 元件不存在');
+        break;
+      }
       case 'assertText': {
         const content = await this.page.locator(s.selector).innerText({ timeout: 8000 });
         if (!content.includes(s.text)) throw new Error('指定元件文字不符合預期');
@@ -188,7 +208,16 @@ export class E2EEngine extends EventEmitter {
         if (this.page.url() !== expected) throw new Error('目前網址與預期不同');
         break;
       }
-      case 'pauseForLogin': this.takeover('此步驟要求人工登入'); await this.waitIfManual(); break;
+      case 'pauseForLogin': {
+        if (this._autoHandoffForNextPause) {
+          this._autoHandoffForNextPause = false;
+          this.log('info', '上一步已完成自動登入接管，略過重複的人工登入暫停');
+        } else {
+          this.takeover('此步驟要求人工登入');
+          await this.waitIfManual();
+        }
+        break;
+      }
     }
   }
   async run() {
@@ -200,7 +229,10 @@ export class E2EEngine extends EventEmitter {
         await this.runStep(step);
         if (this._cancelled) return;
         // 在登入畫面或跨來源頁面停下；不記錄任何登入畫面截圖
-        if (this.state !== 'manual' && await this.needsLogin()) this.takeover('偵測到登入頁面或第三方驗證流程');
+        if (this.state !== 'manual' && await this.needsLogin()) {
+          this.takeover('偵測到登入頁面或第三方驗證流程');
+          this._autoHandoffForNextPause = true;
+        }
         await this.waitIfManual();
         this.results.push({ name: step.name, status: 'passed', elapsedMs: Date.now() - t0 });
         this.log('pass', `通過：${step.name}`);
@@ -229,6 +261,7 @@ export class E2EEngine extends EventEmitter {
       await mkdir(this.artifactsDir, { recursive: true, mode: 0o700 });
       await writeFile(resolve(this.artifactsDir, 'report.json'), JSON.stringify({
         state: this.state, generatedAt: new Date().toISOString(), results: this.results,
+        profile: this.status().profile,
         acceptance: this.status().acceptance
       }, null, 2), { mode: 0o600 });
     } catch { this.log('warn', '無法輸出本機報告檔'); }
