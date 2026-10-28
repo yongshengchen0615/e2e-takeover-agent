@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "e2e-takeover-agent",
-  "version": "0.2.0",
-  "description": "可視化管理端／多用戶端 E2E 測試，支援 LINE 或測試帳號身分設定與人工接管登入。",
+  "version": "0.3.1",
+  "description": "可選本機或完全雲端的 E2E 測試：輸入管理端與用戶端網址後開始自動測試，支援即時畫面、手機與人工 LINE 登入接管。",
   "extensions": {
     "com.openai": {
       "requires_local_executor": true,

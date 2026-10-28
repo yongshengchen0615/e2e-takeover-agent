@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: e2e-takeover-agent-cloud
+    runtime: node
+    plan: starter
+    buildCommand: npm install --no-audit --no-fund
+    startCommand: npm run cloud
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: CLOUD_ADMIN_USER
+        sync: false
+      - key: CLOUD_ADMIN_PASSWORD
+        sync: false
+      - key: BROWSERBASE_API_KEY
+        sync: false
+      - key: BROWSERBASE_PROJECT_ID
+        sync: false
+      - key: E2E_ALLOWED_ORIGINS
+        sync: false

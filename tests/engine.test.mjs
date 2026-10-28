@@ -126,3 +126,18 @@ test('explicit login pause after login URL does not require two handoffs', async
   assert.equal(engine.results.length, 3);
   await engine.stop();
 });
+
+test('never releases screenshots after a manual takeover during capture', async () => {
+  const engine = new E2EEngine();
+  engine.state = 'running';
+  engine.plan = { origin: 'http://localhost:3000', steps: [] };
+  engine.page = {
+    url: () => 'http://localhost:3000/',
+    locator: () => ({ isVisible: async () => false }),
+    screenshot: async () => { engine.takeover('登入畫面'); return Buffer.from('sensitive-image'); },
+    isClosed: () => false
+  };
+  engine.context = { pages: () => [engine.page] };
+  assert.equal(await engine.preview(), null);
+  await engine.stop();
+});

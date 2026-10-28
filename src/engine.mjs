@@ -47,13 +47,15 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
 }
 
 export class E2EEngine extends EventEmitter {
-  constructor({ browserFactory, artifactsDir = resolve('artifacts'), allowRemote } = {}) {
+  constructor({ browserFactory, sessionFactory, artifactsDir = resolve('artifacts'), allowRemote } = {}) {
     super();
     this.browserFactory = browserFactory ?? (async () => {
       const { chromium } = await import('playwright');
       return chromium.launch({ headless: false, slowMo: 120 });
     });
     this.allowRemote = allowRemote;
+    this.sessionFactory = sessionFactory;
+    this.sessionId = null;
     this.artifactsDir = artifactsDir;
     this.state = 'idle';
     this.events = [];
@@ -84,11 +86,19 @@ export class E2EEngine extends EventEmitter {
     this.state = 'starting';
     this.log('info', '啟動可見瀏覽器，準備進行測試');
     try {
-      this.browser = await this.browserFactory();
-      this.context = await this.browser.newContext(this.plan.device === 'mobile'
-        ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }
-        : { viewport: { width: 1440, height: 900 } });
-      this.page = await this.context.newPage();
+      if (this.sessionFactory) {
+        const session = await this.sessionFactory(this.plan);
+        this.browser = session.browser;
+        this.context = session.context;
+        this.page = session.page;
+        this.sessionId = session.sessionId;
+      } else {
+        this.browser = await this.browserFactory();
+        this.context = await this.browser.newContext(this.plan.device === 'mobile'
+          ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }
+          : { viewport: { width: 1440, height: 900 } });
+        this.page = await this.context.newPage();
+      }
       this.state = 'running';
       this.log('info', '測試開始');
       this.running = this.run().catch(err => {
@@ -193,7 +203,9 @@ export class E2EEngine extends EventEmitter {
     if (this.state !== 'running' || !this.page || await this.needsLogin()) return null;
     try {
       if (this.state !== 'running') return null;
-      return await this.page.screenshot({ type: 'jpeg', quality: 60, timeout: 1200 });
+      const image = await this.page.screenshot({ type: 'jpeg', quality: 60, timeout: 1200 });
+      if (this.state !== 'running' || await this.needsLogin()) return null;
+      return image;
     } catch { return null; }
   }
   async writeReport() {
@@ -213,6 +225,7 @@ export class E2EEngine extends EventEmitter {
     this.browser = null;
     this.page = null;
     this.context = null;
+    this.sessionId = null;
     this.state = 'stopped';
     this.pauseReason = null;
     this.log('stop', '測試已停止，瀏覽器已關閉');
