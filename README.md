@@ -20,7 +20,8 @@ npm start
 
 ## 核心功能
 
-- 可設定管理端、多個用戶端（桌面或手機模擬）及多個測試身分\n- 看得見的 Chromium 測試執行過程與即時日誌
+- 可設定管理端、多個用戶端（桌面或手機模擬）及多個測試身分
+- 看得見的 Chromium 測試執行過程與即時日誌
 - 在密碼／OTP／SSO 流程期間暫停自動化、由使用者人工接管
 - 使用同一 `BrowserContext` 繼續測試，避免重新登入
 - 執行常見的 UI 操作與斷言；產出本機 JSON 報告
@@ -31,7 +32,8 @@ npm start
 - [`src/`](src/)：Playwright 引擎、Web 控制台、MCP 服務
 - [`skills/run-e2e/SKILL.md`](skills/run-e2e/SKILL.md)：AI 測試工作流程
 - [`tests/`](tests/)：Node.js 自動化測試
-- [`config/example.plan.json`](config/example.plan.json)：測試步驟範例\n- [`config/example.workspace.json`](config/example.workspace.json)：可自訂多端點／LINE／測試身分範例（無密碼）
+- [`config/example.plan.json`](config/example.plan.json)：測試步驟範例
+- [`config/example.workspace.json`](config/example.workspace.json)：可自訂多端點／LINE／測試身分範例（無密碼）
 - [`README.zh-TW.md`](README.zh-TW.md)：繁體中文完整使用手冊
 - [`TESTING.md`](TESTING.md)：測試範圍與限制
 - [`docs/ROADMAP.md`](docs/ROADMAP.md)：版本計畫與驗收條件
