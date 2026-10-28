@@ -110,3 +110,19 @@ test('mobile device plan uses isolated mobile emulation context', async () => {
   await engine.stop();
   assert.throws(() => validatePlan({ baseUrl: 'http://localhost:3000', device: 'tablet' }), /device/);
 });
+
+test('explicit login pause after login URL does not require two handoffs', async () => {
+  const fake = setup();
+  const engine = new E2EEngine({ browserFactory: fake.browserFactory });
+  await engine.start({ baseUrl: 'http://localhost:3000', steps: [
+    { action: 'goto', path: '/login' },
+    { action: 'pauseForLogin' },
+    { action: 'assertVisible', selector: 'body' }
+  ] });
+  await until(() => engine.state === 'manual');
+  fake.loginDone();
+  await engine.resume();
+  await until(() => engine.state === 'completed');
+  assert.equal(engine.results.length, 3);
+  await engine.stop();
+});
