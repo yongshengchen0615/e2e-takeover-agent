@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Cloud E2E · 一鍵測試管理端與用戶端</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header><div><strong>Cloud E2E</strong><small>雲端管理端／用戶端自動測試</small></div><span id="status" class="pill">尚未開始</span></header>
+<main>
+  <section class="workspace">
+    <div class="toolbar"><h2>即時測試畫面</h2><span>雲端 Chromium · 不需 localhost</span></div>
+    <div class="viewer"><img id="preview" alt="即時測試畫面"><div class="overlay" id="overlay">輸入網址並開始測試</div></div>
+    <div class="notice" id="notice">測試依序執行，遇到 LINE 登入、密碼或 OTP 時，點「人工接管」，於雲端瀏覽器完成登入後繼續。</div>
+    <div class="buttons">
+      <button id="live" class="secondary" disabled>↗ 開啟雲端互動瀏覽器</button>
+      <button id="takeover" class="secondary" disabled>✋ 人工接管</button>
+      <button id="resume" disabled>▶ 登入完成，繼續</button>
+      <button id="stop" class="danger" disabled>■ 停止</button>
+    </div>
+    <p id="live-link"></p>
+    <h2 class="log-heading">測試結果</h2>
+    <ol id="results" class="events"></ol>
+    <h2 class="log-heading">測試紀錄</h2>
+    <ol id="events" class="events"></ol>
+  </section>
+  <aside>
+    <h2>直接輸入網址，開始 E2E</h2>
+    <label for="admin">管理端網址</label>
+    <input id="admin" type="url" placeholder="https://admin.example.com/" autocomplete="off" spellcheck="false">
+    <label for="clients">用戶端網址（每行一個；至少一個）</label>
+    <textarea id="clients" rows="3" placeholder="https://app.example.com/&#10;https://mobile.example.com/" spellcheck="false"></textarea>
+    <button id="start" class="primary">▶ 開始管理端＋用戶端 E2E 自動測試</button>
+    <p class="hint">自動開啟網站並確認畫面載入；管理端採桌面尺寸、用戶端預設採手機尺寸。遇到登入或特殊驗證時，人工接管同一個雲端瀏覽器即可繼續。</p>
+    <details class="advanced"><summary>進階設定（選用）</summary>
+      <label><input id="mobile" type="checkbox" checked> 用戶端使用手機畫面 390 × 844</label>
+      <p class="hint">LINE 登入與測試帳號密碼均由你在雲端瀏覽器中輸入，不寫進設定檔。最多八個用戶端，依序測試並分開瀏覽器工作階段。</p>
+    </details>
+    <p class="hint">僅能測試部署管理者事先核准的 HTTPS 網站。真實流程的業務驗證需要針對網站添加專屬斷言。</p>
+    <p id="error" class="error" role="alert"></p>
+  </aside>
+</main>
+<div data-token="__CSRF_TOKEN__" data-cloud="1" id="config" hidden></div>
+<script src="/app.js" defer></script>
+</body>
+</html>
