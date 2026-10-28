@@ -1,6 +1,46 @@
 const $ = id => document.getElementById(id);
 const token = $('config').dataset.token;
 let previousState = '';
+let loadedProfileId = null;
+const defaultSite = 'https://memberwebsocket-dev-netlify.netlify.app';
+async function initProfiles() {
+  try {
+    const response = await fetch('/api/profiles', {cache:'no-store'});
+    if (!response.ok) throw new Error('無法載入方案清單');
+    const data = await response.json();
+    for (const item of data.profiles) {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.label;
+      option.dataset.note = item.note;
+      $('preset').append(option);
+    }
+  } catch (err) { $('presetInfo').textContent = '預設方案讀取失敗；仍可貼入自訂 JSON。'; }
+}
+$('preset').onchange = () => {
+  const option = $('preset').selectedOptions[0];
+  $('presetInfo').textContent = option?.dataset.note || '請選擇管理端或用戶端測試方案，或保留自訂 JSON。';
+};
+$('loadPreset').onclick = async () => {
+  message();
+  const id = $('preset').value;
+  if (!id) { message('請先選取管理端或用戶端測試方案'); return; }
+  try {
+    const response = await fetch('/api/profile?id='+encodeURIComponent(id), {cache:'no-store'});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || '無法載入測試設定');
+    const plan = data.plan;
+    const inputBase = $('base').value.trim();
+    // Preserve a consciously chosen localhost/custom staging URL when loading a preset.
+    if (inputBase && inputBase !== 'http://localhost:3000' && inputBase !== defaultSite) plan.baseUrl = inputBase;
+    $('base').value = plan.baseUrl;
+    $('steps').value = JSON.stringify(plan, null, 2);
+    loadedProfileId = id;
+    $('presetInfo').textContent = $('preset').selectedOptions[0].dataset.note +
+      ' 測試計畫已載入；可檢視 JSON 後執行。';
+  } catch (err) { message(err.message); }
+};
+initProfiles();
 const states = { idle: '尚未開始', starting: '啟動中', running: 'AI 自動測試', manual: '人工接管中', completed: '已完成', failed: '測試失敗', stopped: '已停止' };
 function message(text='') { $('error').textContent = text; }
 async function post(route, value) {
@@ -17,6 +57,9 @@ $('start').onclick = async () => {
     const input = JSON.parse($('steps').value);
     const plan = Array.isArray(input) ? { baseUrl: $('base').value, steps: input } : input;
     if (!plan || typeof plan !== 'object' || Array.isArray(plan)) throw new Error('請填寫步驟陣列或完整測試計畫物件');
+    if (loadedProfileId && plan.profileId === loadedProfileId) {
+      plan.baseUrl = $('base').value.trim();
+    }
     if (typeof plan.baseUrl === 'string') $('base').value = plan.baseUrl;
     await post('start', plan);
     await refresh();
@@ -32,6 +75,8 @@ async function refresh() {
     const data = await response.json();
     $('status').textContent = states[data.state] ?? data.state;
     $('start').disabled = ['starting','running','manual'].includes(data.state);
+    $('loadPreset').disabled = ['starting','running','manual'].includes(data.state);
+    $('preset').disabled = ['starting','running','manual'].includes(data.state);
     $('takeover').disabled = data.state !== 'running';
     $('resume').disabled = data.state !== 'manual';
     $('stop').disabled = ['idle','stopped'].includes(data.state);
