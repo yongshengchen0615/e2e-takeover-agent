@@ -47,3 +47,12 @@ test('local workspace is saved and reloaded without secrets', async () => {
     assert.doesNotMatch(await readFile(file, 'utf8'), /"password"/);
   } finally { await rm(folder, { recursive: true, force: true }); }
 });
+
+test('custom assertions without navigation still visit selected endpoint before login', () => {
+  const plan = buildProfilePlan(DEFAULT_WORKSPACE, {
+    targetId: 'admin', accountId: 'admin-qa',
+    steps: [{ action: 'assertVisible', selector: 'body' }]
+  });
+  assert.deepEqual(plan.steps.map(s => s.action), ['goto', 'pauseForLogin', 'assertVisible']);
+  assert.equal(plan.steps[0].path, '/admin');
+});
