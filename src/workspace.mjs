@@ -65,6 +65,7 @@ export function buildProfilePlan(workspaceInput, { targetId, accountId = '', ste
   ] : steps;
   if (!Array.isArray(selected)) throw new Error('測試步驟必須為陣列');
   const planned = selected.map(step => ({ ...step }));
+  if (!planned.some(step => step.action === 'goto')) planned.unshift({ name: '開啟受測網站', action: 'goto', path: target.startPath });
   if (account && !planned.some(step => step.action === 'pauseForLogin')) {
     const afterFirstGoto = planned.findIndex(step => step.action === 'goto');
     planned.splice(afterFirstGoto + 1, 0, { name: account.method === 'line' ? '人工完成 LINE 登入' : '人工輸入測試帳號密碼', action: 'pauseForLogin' });
