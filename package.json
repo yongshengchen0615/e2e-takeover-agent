@@ -10,7 +10,9 @@
     "mcp": "node src/mcp.mjs",
     "test": "node --test tests/*.test.mjs",
     "acceptance:check": "node src/acceptance-cli.mjs",
-    "check": "node --check src/acceptance.mjs && node --check src/profiles.mjs && node --check src/dashboard.js && node --check src/acceptance-cli.mjs && node --check src/engine.mjs && node --check src/server.mjs && node --check src/mcp.mjs"
+    "role:smoke:admin": "node src/run-role-smoke.mjs admin-structure",
+    "role:smoke:client": "node src/run-role-smoke.mjs client-structure",
+    "check": "node --check src/acceptance.mjs && node --check src/profiles.mjs && node --check src/run-role-smoke.mjs && node --check src/dashboard.js && node --check src/acceptance-cli.mjs && node --check src/engine.mjs && node --check src/server.mjs && node --check src/mcp.mjs"
   },
   "dependencies": { "playwright": "^1.58.0" }
 }
