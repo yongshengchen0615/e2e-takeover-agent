@@ -71,6 +71,19 @@
 - 若日後授予 Projects item/field 權限，可由授權後的 GitHub workflow 把結果連結到對應任務卡；操作前必須確認 issue/PR ID、過濾狀態欄、避免誤更新。
 - 即使 Gate `passed`，也只代表計畫中覆蓋的驗收，**不是無條件允許正式發布**。
 
+## 自動化驗收 CLI（發布前使用）
+
+真實 E2E 測試完成並產生 `artifacts/report.json` 後，可執行：
+
+```bash
+npm run acceptance:check -- artifacts/report.json
+```
+
+- `0`：驗收 Gate 為 passed，整體測試 completed，存在必要 criteria，且對應實際步驟及驗收證據全部通過。
+- `1`：找不到報告、未設定、失敗、登入待接管、測試中止、必要證據缺漏，或報告的 Gate 與實際步驟不一致。
+- 在部署 CI 中，應把這個命令接在**實際 Playwright E2E** 之後，並只傳入該次執行產出的報告。**不能用單元測試、模擬報告替代真實 E2E 證據。**
+- 報告是本機普通 JSON，不含不可竄改簽章。請使用可信 CI runner / artifact 與對應 commit SHA 保存來源資訊，禁止把不可信的外部報告直接視為正式發布批准。
+
 ## 操作與驗證
 
 1. 本機安裝 `npm install`、`npx playwright install chromium`。
