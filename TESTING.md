@@ -20,3 +20,11 @@
 **額外瀏覽器實測**：使用本機已配置的 Chromium 及 Playwright driver，在 Xvfb 圖形桌面啟動 headed Chromium。以模擬登入內容執行 `pauseForLogin → 人工等效頁面操作（測試腳本）→ resume → assertVisible`，流程完成，接管期間 `preview()` 回傳 null。這只是實際瀏覽器核心流程驗證，不是手動輸入真實帳密；此外環境的本機 HTTP 導航遭行政網路政策阻擋，因此沒有宣稱實際網站 E2E 成功。
 
 **部署驗證仍需執行**：在支援視窗的開發者電腦執行 `npm install && npx playwright install chromium && npm start`，使用指定 staging 專案測試登入，確認 1）即時預覽與日誌；2）自動識別；3）使用者可在同一視窗自行登入；4）登入後按繼續；5）後續斷言成立；6）報告完整。
+
+## v0.2 多端點與登入身分驗收
+
+- `tests/workspace.test.mjs`：端點／身分 schema、帳號與端點綁定、密碼欄位拒絕、預設 LINE 人工接管、設定檔持久化。
+- `tests/http.test.mjs`：設定 API 必須通過原有本機 CSRF 防護；配置能儲存與讀回。
+- `tests/engine.test.mjs`：手機 Playwright context、無效裝置拒絕、登入自動辨識與顯式人工暫停不重複。
+- 實際網站測試：逐一選取管理端、至少兩個用戶端，逐個設定有效測試網址，完成 LINE／測試帳號人工登入，確認登入後斷言與權限隔離。**此項必須由具備相應帳號、登入權限與圖形 Chromium 的環境執行，單元測試不能替代。**
+- 設定檔不包含密碼、Token 或 Cookies，`config/local.workspace.json` 預設不追蹤。
