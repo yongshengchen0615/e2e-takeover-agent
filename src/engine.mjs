@@ -164,7 +164,7 @@ export class E2EEngine extends EventEmitter {
     }
   }
   async run() {
-    for (const step of this.plan.steps) {
+    for (const [index, step] of this.plan.steps.entries()) {
       await this.waitIfManual();
       this.log('step', `執行：${step.name}`);
       const t0 = Date.now();
@@ -172,7 +172,7 @@ export class E2EEngine extends EventEmitter {
         await this.runStep(step);
         if (this._cancelled) return;
         // 在登入畫面或跨來源頁面停下；不記錄任何登入畫面截圖
-        if (this.state !== 'manual' && await this.needsLogin()) this.takeover('偵測到登入頁面或第三方驗證流程');
+        if (this.state !== 'manual' && this.plan.steps[index + 1]?.action !== 'pauseForLogin' && await this.needsLogin()) this.takeover('偵測到登入頁面或第三方驗證流程');
         await this.waitIfManual();
         this.results.push({ name: step.name, status: 'passed', elapsedMs: Date.now() - t0 });
         this.log('pass', `通過：${step.name}`);
