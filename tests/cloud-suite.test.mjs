@@ -54,3 +54,14 @@ test('multi-target quick suite runs targets serially, with separated remote sess
   assert.equal(peak, 1);
   assert.deepEqual(suite.status().results.map(x => x.target), ['管理端','用戶端 1','用戶端 2']);
 });
+
+test('optional LINE/test-account login pauses each target before assertions', () => {
+  const plans = quickPlans({
+    adminUrl: 'https://admin.example.com',
+    clientUrls: 'https://app.example.com',
+    login: true
+  }, allowedOrigins);
+  for (const p of plans) {
+    assert.deepEqual(p.plan.steps.map(s => s.action), ['goto', 'pauseForLogin', 'assertVisible']);
+  }
+});
