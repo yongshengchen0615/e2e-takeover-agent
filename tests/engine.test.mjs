@@ -130,7 +130,7 @@ test('explicit login pause after login URL does not require two handoffs', async
 test('never releases screenshots after a manual takeover during capture', async () => {
   const engine = new E2EEngine();
   engine.state = 'running';
-  engine.plan = { origin: 'http://localhost:3000' };
+  engine.plan = { origin: 'http://localhost:3000', steps: [] };
   engine.page = {
     url: () => 'http://localhost:3000/',
     locator: () => ({ isVisible: async () => false }),
