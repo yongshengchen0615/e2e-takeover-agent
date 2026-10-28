@@ -1,4 +1,5 @@
 import { E2EEngine, validatePlan } from './engine.mjs';
+import { isIP } from 'node:net';
 
 export function cloudViewport(device = 'desktop') {
   return device === 'mobile' ? { width: 390, height: 844 } : { width: 1440, height: 900 };
@@ -58,7 +59,7 @@ export class BrowserbaseAdapter {
 
 function blockedHost(host) {
   const value = host.toLowerCase().replace(/^\[|\]$/g, '');
-  return value === 'localhost' || value.endsWith('.localhost') ||
+  return isIP(value) !== 0 || value === 'localhost' || value.endsWith('.localhost') ||
     value === '::1' || value === '0.0.0.0' ||
     /^127\./.test(value) || /^10\./.test(value) || /^192\.168\./.test(value) ||
     /^169\.254\./.test(value) || /^172\.(1[6-9]|2\d|3[01])\./.test(value) ||
