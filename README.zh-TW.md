@@ -1,4 +1,4 @@
-# E2E Takeover Agent — v0.3.0（QA / E2E 驗收關卡）
+# E2E Takeover Agent — v0.4.0（管理端／用戶端測試設定）
 
 針對 **Web 專案**的可見 Playwright E2E 測試工具。當需要登入、雙重驗證或第三方登入時，交還操控權讓使用者直接操作同一個 Chromium 瀏覽器視窗，完成登入後恢復後續測試。
 
@@ -20,6 +20,17 @@
 - 專案對應、風險與後續測試矩陣：`docs/MEMBERWEBSOCKET_INTEGRATION.md`。
 
 **注意**：既有的本機控制介面可視化，並不代表 ChatGPT 網頁或手機可以直接接管遠端瀏覽器。
+
+## v0.4.0 — 管理端與用戶端測試設定
+
+- 本機儀表板新增**測試對象／方案**選單與**載入選取的測試方案**按鈕：選擇管理端、會員卡、集點卡、預約、活動票券、活動日曆。
+- 各有兩種驗證層級：**頁面結構（DOM 存在，無需登入）**或**登入後 UI 驗收（人工登入接管，登入後元件必須可見）**。結構測試不能證明使用者已授權。
+- 預設方案均為唯讀，不會建立預約、變更會員、領取票券、轉贈點數或寫入 Supabase 資料。
+- 新增 `assertPresent`（可驗證隱藏的 HTML 結構）、強化 `assertVisible` 的載入等待與重複登入接管提示處理。
+- 新增 `e2e_profiles` 與 `e2e_start_profile` MCP 工具，原有 JSON 計畫與 `e2e_start` 仍相容。
+- 詳細覆蓋與限制：`docs/ROLE_TEST_PROFILES.md`。
+
+**使用**：本機啟動儀表板 → 選「管理端｜頁面結構」或「用戶端｜會員卡登入後驗收」等 → 載入方案 → 核對受測網址與測試 JSON → 開始測試。對 Netlify staging 必須顯式開啟 `E2E_ALLOW_REMOTE=1`。
 
 ## v0.3.0 新增：QA / E2E 驗收
 
@@ -75,7 +86,7 @@ $env:E2E_ALLOW_REMOTE="1"; npm start
 
 `plugin.json` 是 Agent Plugins 的可攜 Manifest；`mcp.json` 設定本地 `stdio` MCP server。若在允許本地 MCP 程序的 Agent/桌面環境使用，請先完成 `npm install` 與 Chromium 安裝，然後由支援 local executor 的客戶端啟動此外掛。此 ZIP **不能直接讓 ChatGPT 網頁版控制你的本機電腦**；需要客戶端、權限、MCP 連線與安裝驗證。
 
-暴露工具：`e2e_open_dashboard`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`、`e2e_acceptance`。若只是要使用儀表板，完全不需連 MCP。
+暴露工具：`e2e_open_dashboard`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`、`e2e_acceptance`、`e2e_profiles`、`e2e_start_profile`。若只是要使用儀表板，完全不需連 MCP。
 
 ## 安全性
 
