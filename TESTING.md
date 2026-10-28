@@ -28,3 +28,12 @@
 - `tests/engine.test.mjs`：手機 Playwright context、無效裝置拒絕、登入自動辨識與顯式人工暫停不重複。
 - 實際網站測試：逐一選取管理端、至少兩個用戶端，逐個設定有效測試網址，完成 LINE／測試帳號人工登入，確認登入後斷言與權限隔離。**此項必須由具備相應帳號、登入權限與圖形 Chromium 的環境執行，單元測試不能替代。**
 - 設定檔不包含密碼、Token 或 Cookies，`config/local.workspace.json` 預設不追蹤。
+
+
+## 雲端 E2E v0.3 驗收
+
+- `tests/cloud.test.mjs`: 雲端 Browserbase 介面（SDK mock）、手機 viewport、遠端來源白名單、管理者 Basic Auth、CSRF、短效 live URL、簡易控制台與 quick-start API。
+- `tests/cloud-suite.test.mjs`: 只輸入管理端與多個用戶端網址即可產生方案；每站獨立序列測試；可勾選 LINE／測試帳號人工登入暫停；非法來源拒絕。
+- `tests/engine.test.mjs`: 在人工接管切換期間阻擋洩漏截圖。
+- 上述皆可由 GitHub Actions 自動驗證；**不代表**已在 Render 部署、連接真實 Browserbase、完成 LINE OAuth 或對真實網站執行完整業務流程。
+- 上線前人工驗收：Render HTTPS /healthz、管理者登入、Browserbase 連接與 live debugger、LINE 人工接管與恢復、手機畫面、多端點相互隔離、錯誤網址封鎖。
