@@ -203,7 +203,9 @@ export class E2EEngine extends EventEmitter {
     if (this.state !== 'running' || !this.page || await this.needsLogin()) return null;
     try {
       if (this.state !== 'running') return null;
-      return await this.page.screenshot({ type: 'jpeg', quality: 60, timeout: 1200 });
+      const image = await this.page.screenshot({ type: 'jpeg', quality: 60, timeout: 1200 });
+      if (this.state !== 'running' || await this.needsLogin()) return null;
+      return image;
     } catch { return null; }
   }
   async writeReport() {
