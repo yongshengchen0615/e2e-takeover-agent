@@ -8,31 +8,65 @@
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header><div><strong>E2E Takeover Agent</strong><small>LIVE TEST • HUMAN HANDOFF</small></div><div id="status" class="pill">尚未開始</div></header>
+  <header><div><strong>E2E Takeover Agent</strong><small>MULTI-TARGET • MOBILE • HUMAN LOGIN</small></div><div id="status" class="pill">尚未開始</div></header>
   <main>
     <section class="workspace">
-      <div class="toolbar"><h2>即時測試畫面</h2><span>本機 Chromium 可直接操作</span></div>
+      <div class="toolbar"><h2>即時測試畫面</h2><span>Playwright Chromium 可直接操作</span></div>
       <div class="viewer"><img id="preview" alt="即時測試畫面"><div id="overlay" class="overlay">尚未開始測試</div></div>
-      <div id="notice" class="notice">登入、OTP 或第三方驗證時，請直接操作開啟的 Chromium 視窗；面板在人工接管期間不擷取畫面。</div>
+      <div id="notice" class="notice">LINE、測試密碼、OTP 都在彈出的 Chromium 中由本人操作。人工接管期間不擷取畫面。</div>
       <div class="buttons">
-        <button id="takeover" class="secondary" disabled>✋ 交還控制權</button>
+        <button id="takeover" class="secondary" disabled>✋ 人工接管</button>
         <button id="resume" disabled>▶ 登入完成，繼續</button>
         <button id="stop" class="danger" disabled>■ 結束</button>
       </div>
+      <h2 class="log-heading">執行紀錄</h2>
+      <ol id="events" class="events"><li>等待啟動…</li></ol>
     </section>
     <aside>
-      <h2>測試設定</h2>
-      <label for="base">受測網站（預設只允許 localhost）</label>
-      <input id="base" type="url" value="http://localhost:3000" spellcheck="false">
-      <label for="steps">步驟 JSON（可修改）</label>
-      <textarea id="steps" spellcheck="false">[
-  { "name": "開啟首頁", "action": "goto", "path": "/" },
-  { "name": "確認首頁", "action": "assertVisible", "selector": "body" }
-]</textarea>
-      <button id="start" class="primary">開始測試</button>
-      <p class="hint">支援 goto、click、fill、assertVisible、assertText、assertUrl、pauseForLogin。當登入頁面被偵測到，測試會自動暫停。</p>
-      <h2>執行紀錄</h2>
-      <ol id="events" class="events"><li>等待啟動…</li></ol>
+      <h2>管理端／用戶端設定</h2>
+      <label for="target">選擇受測端</label>
+      <select id="target"></select>
+      <div class="buttons slim">
+        <button id="add-target" class="secondary">＋ 新增用戶端</button>
+        <button id="remove-target" class="danger">移除目前端</button>
+      </div>
+      <label for="target-name">端點名稱</label>
+      <input id="target-name" type="text" maxlength="120">
+      <label for="target-url">受測網址（預設僅 localhost）</label>
+      <input id="target-url" type="url" spellcheck="false">
+      <label for="target-path">起始路徑</label>
+      <input id="target-path" type="text" spellcheck="false">
+      <div class="two-col">
+        <div><label for="target-kind">類型</label><select id="target-kind"><option value="admin">管理端</option><option value="client">用戶端</option></select></div>
+        <div><label for="target-device">畫面</label><select id="target-device"><option value="desktop">桌面 1440 × 900</option><option value="mobile">手機 390 × 844</option></select></div>
+      </div>
+
+      <h2 class="subheading">測試身分</h2>
+      <label for="account">選擇登入身分</label>
+      <select id="account"></select>
+      <div class="buttons slim">
+        <button id="add-account" class="secondary">＋ 新增測試用戶</button>
+        <button id="remove-account" class="danger">移除目前身分</button>
+      </div>
+      <div id="account-fields">
+        <label for="account-name">身分顯示名稱</label>
+        <input id="account-name" type="text" maxlength="120">
+        <label for="account-method">登入方式</label>
+        <select id="account-method">
+          <option value="line">LINE 登入（人工接管）</option>
+          <option value="test_account">測試帳號（人工輸入密碼）</option>
+        </select>
+        <label for="account-username">測試帳號名稱（非密碼；LINE 可留空）</label>
+        <input id="account-username" type="text" maxlength="200" autocomplete="off">
+        <label for="account-targets">適用的管理端／用戶端（可複選）</label>
+        <select id="account-targets" multiple size="3"></select>
+      </div>
+      <p class="hint">可設定多個網址與身分，並逐一選取執行。設定只保存在本機，請勿輸入密碼或 Token。範例帳號尚未在網站建立。</p>
+      <button id="save" class="secondary full">儲存測試環境設定</button>
+      <h2 class="subheading">測試步驟</h2>
+      <label for="steps">自訂步驟 JSON（可留空使用預設測試）</label>
+      <textarea id="steps" spellcheck="false" placeholder='[{"action":"goto","path":"/"},{"action":"assertVisible","selector":"body"}]'></textarea>
+      <button id="start" class="primary">開始測試選取的端點與身分</button>
       <p id="error" class="error" role="alert"></p>
     </aside>
   </main>
