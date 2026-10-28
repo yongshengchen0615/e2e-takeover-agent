@@ -24,6 +24,9 @@ test('MCP stdio handshake, tool enumeration and dashboard access', async () => {
     child.stdin.write(JSON.stringify({ jsonrpc:'2.0', method:'notifications/initialized' }) + '\n');
     const tools = await rpc('tools/list');
     assert.ok(tools.result.tools.some(t => t.name === 'e2e_resume'));
+    assert.ok(tools.result.tools.some(t => t.name === 'e2e_acceptance'));
+    const acceptanceTool = await rpc('tools/call', { name:'e2e_acceptance', arguments:{} });
+    assert.equal(JSON.parse(acceptanceTool.result.content[0].text).status.acceptance, null);
     const opened = await rpc('tools/call', { name:'e2e_open_dashboard', arguments:{} });
     const obj = JSON.parse(opened.result.content[0].text);
     assert.match(obj.dashboardUrl, /^http:\/\/127\.0\.0\.1:\d+$/);
