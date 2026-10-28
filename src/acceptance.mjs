@@ -1,4 +1,4 @@
-const ASSERTIONS = new Set(['assertVisible', 'assertText', 'assertUrl']);
+const ASSERTIONS = new Set(['assertVisible', 'assertPresent', 'assertText', 'assertUrl']);
 const ID_RE = /^[A-Za-z][A-Za-z0-9_-]{1,39}$/;
 
 export function validateAcceptance(input, steps) {
