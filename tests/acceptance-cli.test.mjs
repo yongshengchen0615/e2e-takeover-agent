@@ -13,7 +13,7 @@ test('acceptance:check blocks missing, failed and falsified QA/E2E results, pass
   const path=join(folder,'report.json');
   try {
     assert.notEqual(run(path).status,0, 'missing report must fail closed');
-    const valid={ state:'completed', acceptance: {
+    const valid={ state:'completed', results:[{name:'首頁可見',status:'passed',elapsedMs:3}], acceptance: {
       method:'QA / E2E', gate:'passed', accepted:true, criteria:[
         {id:'QA-001',required:true,status:'passed',evidence:[{name:'首頁可見',status:'passed'}]}
       ]
@@ -22,6 +22,7 @@ test('acceptance:check blocks missing, failed and falsified QA/E2E results, pass
     assert.equal(run(path).status,0, 'full verified acceptance report should pass');
     for (const bad of [
       {...valid,state:'manual'},
+      {...valid,results:[{name:'首頁可見',status:'failed'}]},
       {...valid,acceptance:{...valid.acceptance,gate:'blocked'}},
       {...valid,acceptance:{...valid.acceptance,accepted:false}},
       {...valid,acceptance:{...valid.acceptance,criteria:[]}},
