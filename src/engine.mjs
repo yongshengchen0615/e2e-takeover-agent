@@ -15,6 +15,8 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
   if (!allowRemote && !['localhost', '127.0.0.1', '[::1]'].includes(baseUrl.hostname)) {
     throw new Error('預設僅允許 localhost；遠端測試需由使用者在自己的電腦設定 E2E_ALLOW_REMOTE=1');
   }
+  const device = input.device ?? 'desktop';
+  if (!['desktop', 'mobile'].includes(device)) throw new Error('device 必須是 desktop 或 mobile');
   const steps = input.steps ?? [
     { name: '開啟首頁', action: 'goto', path: '/' },
     { name: '首頁可見', action: 'assertVisible', selector: 'body' }
@@ -41,7 +43,7 @@ export function validatePlan(input, { allowRemote = process.env.E2E_ALLOW_REMOTE
     if (s.action === 'assertUrl') requireString('path');
     return step;
   });
-  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, steps: clean };
+  return { baseUrl: baseUrl.toString(), origin: baseUrl.origin, device, steps: clean };
 }
 
 export class E2EEngine extends EventEmitter {
@@ -83,7 +85,9 @@ export class E2EEngine extends EventEmitter {
     this.log('info', '啟動可見瀏覽器，準備進行測試');
     try {
       this.browser = await this.browserFactory();
-      this.context = await this.browser.newContext();
+      this.context = await this.browser.newContext(this.plan.device === 'mobile'
+        ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }
+        : { viewport: { width: 1440, height: 900 } });
       this.page = await this.context.newPage();
       this.state = 'running';
       this.log('info', '測試開始');
@@ -160,7 +164,7 @@ export class E2EEngine extends EventEmitter {
     }
   }
   async run() {
-    for (const step of this.plan.steps) {
+    for (const [index, step] of this.plan.steps.entries()) {
       await this.waitIfManual();
       this.log('step', `執行：${step.name}`);
       const t0 = Date.now();
@@ -168,7 +172,7 @@ export class E2EEngine extends EventEmitter {
         await this.runStep(step);
         if (this._cancelled) return;
         // 在登入畫面或跨來源頁面停下；不記錄任何登入畫面截圖
-        if (this.state !== 'manual' && await this.needsLogin()) this.takeover('偵測到登入頁面或第三方驗證流程');
+        if (this.state !== 'manual' && this.plan.steps[index + 1]?.action !== 'pauseForLogin' && await this.needsLogin()) this.takeover('偵測到登入頁面或第三方驗證流程');
         await this.waitIfManual();
         this.results.push({ name: step.name, status: 'passed', elapsedMs: Date.now() - t0 });
         this.log('pass', `通過：${step.name}`);

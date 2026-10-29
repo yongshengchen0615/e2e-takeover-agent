@@ -1,4 +1,4 @@
-# E2E Takeover Agent — v0.1.0 MVP
+# E2E Takeover Agent — v0.2.0
 
 針對 **Web 專案**的可見 Playwright E2E 測試工具。當需要登入、雙重驗證或第三方登入時，交還操控權讓使用者直接操作同一個 Chromium 瀏覽器視窗，完成登入後恢復後續測試。
 
@@ -57,7 +57,7 @@ $env:E2E_ALLOW_REMOTE="1"; npm start
 
 `plugin.json` 是 Agent Plugins 的可攜 Manifest；`mcp.json` 設定本地 `stdio` MCP server。若在允許本地 MCP 程序的 Agent/桌面環境使用，請先完成 `npm install` 與 Chromium 安裝，然後由支援 local executor 的客戶端啟動此外掛。此 ZIP **不能直接讓 ChatGPT 網頁版控制你的本機電腦**；需要客戶端、權限、MCP 連線與安裝驗證。
 
-暴露工具：`e2e_open_dashboard`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`。若只是要使用儀表板，完全不需連 MCP。
+暴露工具：`e2e_open_dashboard`、`e2e_profiles`、`e2e_start`、`e2e_status`、`e2e_takeover`、`e2e_resume`、`e2e_stop`。若只是要使用儀表板，完全不需連 MCP。
 
 ## 安全性
 
@@ -75,3 +75,28 @@ npm test
 ```
 
 實際 E2E 驗證須完成 Chromium 安裝並連向你自己的測試網站。請勿以此專案單元測試通過，誤認為你的網站 E2E 已測試通過。
+## v0.2.0：管理端、多用戶端與測試身分
+
+本版本可在 **本機儀表板**直接新增／移除受測端、修改網址與起始路徑、選擇桌面或手機模擬，以及建立多組身分。**預設值是 localhost 示範網址，不是已驗證的真實站點**：
+
+| 受測端 | 預設網址 | 起始路徑 | 畫面 |
+| --- | --- | --- | --- |
+| 管理端 | `http://localhost:3000` | `/admin` | 桌面 1440 × 900 |
+| 用戶端 A | `http://localhost:3001` | `/` | 桌面 1440 × 900 |
+| 用戶端 B | `http://localhost:3002` | `/` | 手機 390 × 844 |
+
+1. 執行 `npm start`，在控制台選擇受測端。網址與起始路徑請換成自己的測試／staging 系統；若是遠端網址，需事先以 `E2E_ALLOW_REMOTE=1` 啟動，且只對獲授權的站點測試。
+2. 按「新增用戶端」建立更多端點；每個端點可使用不同主機、連接埠、頁面和桌面／手機版設定。
+3. 在「測試身分」選擇或新增身分，可設定 **LINE 登入**或 **一般測試帳號**。一般測試帳號只記錄非秘密的帳號名稱（例如測試 email）；選擇適用的多個端點後儲存。
+4. 選擇測試端點與身分，按「開始測試」。LINE OAuth、密碼、OTP 都需**在彈出的 Chromium 由人員完成**；人工接管期間不擷取畫面；完成後按「登入完成，繼續」。
+5. 自訂測試步驟 JSON 可留空，使用「進入指定頁面→（需要時）人工登入→確認頁面可見」。如果提供自訂步驟，登入身分會自動加入人工登入暫停（除非已有 `pauseForLogin`）。
+
+設定儲存於 `config/local.workspace.json`（已加入 `.gitignore`），版本庫中另附 `config/example.workspace.json` 範例。**不要把密碼、LINE Access Token、Cookie、OTP 放進帳號名稱、步驟 JSON 或 GitHub**。設定檔不建立帳號，也不修改 LINE Developers、Supabase Auth 或真實網站的登入機制。
+
+MCP 可先呼叫 `e2e_profiles` 查看受測端／身分，再用 `e2e_start` 指定 `targetId` 與可選的 `accountId`。例如：
+
+```json
+{ "targetId": "client-mobile", "accountId": "client-line" }
+```
+
+舊有 `{ "baseUrl": "http://localhost:3000", "steps": [...] }` 呼叫仍可使用；也可指定 `"device": "mobile"`。**多端點是可管理、可逐一測試的多個網站配置，不代表同時並行跑多個瀏覽器**。網站是否登入成功仍需依各專案新增登入後斷言；真正 LINE 登入／真實帳號、Netlify 部署與 GitHub Projects 看板同步均需各自權限及實際驗證。

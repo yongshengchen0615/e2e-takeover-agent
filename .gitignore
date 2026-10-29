@@ -3,3 +3,5 @@ artifacts/
 playwright/.auth/
 .env
 *.log
+config/local.workspace.json
+.netlify/

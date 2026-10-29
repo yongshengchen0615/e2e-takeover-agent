@@ -21,3 +21,27 @@ test('dashboard binds loopback and requires CSRF token for state changes', async
     assert.equal(ok.status, 200);
   } finally { await app.close(); }
 });
+
+test('dashboard can save and load multiple targets with CSRF protection', async () => {
+  const { mkdtemp, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { DEFAULT_WORKSPACE } = await import('../src/workspace.mjs');
+  const dir = await mkdtemp(join(tmpdir(), 'e2e-http-config-'));
+  const app = createDashboard(new E2EEngine(), { port: 0, workspaceFile: join(dir, 'config.json') });
+  const url = await app.listen();
+  try {
+    const page = await (await fetch(url)).text();
+    const token = page.match(/data-token="([0-9a-f]+)"/)?.[1];
+    const blocked = await fetch(url + '/api/workspace', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(DEFAULT_WORKSPACE) });
+    assert.equal(blocked.status, 403);
+    const stored = await fetch(url + '/api/workspace', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-e2e-token': token },
+      body: JSON.stringify(DEFAULT_WORKSPACE)
+    });
+    assert.equal(stored.status, 200);
+    const loaded = await (await fetch(url + '/api/workspace')).json();
+    assert.equal(loaded.targets.length, 3);
+    assert.equal(loaded.accounts.find(a => a.method === 'line').id, 'client-line');
+  } finally { await app.close(); await rm(dir, { recursive: true, force: true }); }
+});

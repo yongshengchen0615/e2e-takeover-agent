@@ -2,7 +2,7 @@
 
 > 可視化、可人工接管的 Web E2E 測試工具。以 Playwright 執行瀏覽器測試；碰到登入、雙重驗證或其他需要人員介入的步驟時，暫停自動化並讓使用者在**同一個 Chromium 工作階段**操作，完成後再繼續測試。
 
-**專案狀態：v0.1.0 開發中（MVP）**。本儲存庫包含本機測試引擎、瀏覽器即時預覽儀表板、MCP 介面及測試案例。**目前不是直接在 ChatGPT 聊天畫面內操控瀏覽器的遠端服務。**
+**專案狀態：v0.2.0 開發中**。本儲存庫包含本機測試引擎、瀏覽器即時預覽儀表板、MCP 介面及測試案例。**目前不是直接在 ChatGPT 聊天畫面內操控瀏覽器的遠端服務。**
 
 ## 直接在雲端測試管理端（不用 localhost）
 
@@ -18,12 +18,13 @@ npx playwright install chromium
 npm start
 ```
 
-於本機開啟 **http://127.0.0.1:4317**。依照畫面輸入測試站 URL 與步驟 JSON，開始測試。遇到登入時，切換到 Playwright 開啟的 Chromium 視窗自行登入，再回儀表板按「登入完成，繼續」。
+於本機開啟 **http://127.0.0.1:4317**。選擇／新增管理端、用戶端，設定測試網址與 LINE 或一般測試帳號身分，開始測試。遇到登入時，切換到 Playwright 開啟的 Chromium 視窗自行登入，再回儀表板按「登入完成，繼續」。
 
 預設只允許 `localhost` 測試。若要測試你有權限操作的遠端 staging 網站，須自行設定 `E2E_ALLOW_REMOTE=1`。此功能尚未提供破壞性動作審批，**勿直接對正式環境執行未知或具副作用的測試**。
 
 ## 核心功能
 
+- 可設定管理端、多個用戶端（桌面或手機模擬）及多個測試身分
 - 看得見的 Chromium 測試執行過程與即時日誌
 - 在密碼／OTP／SSO 流程期間暫停自動化、由使用者人工接管
 - 使用同一 `BrowserContext` 繼續測試，避免重新登入
@@ -36,6 +37,7 @@ npm start
 - [`skills/run-e2e/SKILL.md`](skills/run-e2e/SKILL.md)：AI 測試工作流程
 - [`tests/`](tests/)：Node.js 自動化測試
 - [`config/example.plan.json`](config/example.plan.json)：測試步驟範例
+- [`config/example.workspace.json`](config/example.workspace.json)：可自訂多端點／LINE／測試身分範例（無密碼）
 - [`README.zh-TW.md`](README.zh-TW.md)：繁體中文完整使用手冊
 - [`TESTING.md`](TESTING.md)：測試範圍與限制
 - [`docs/ROADMAP.md`](docs/ROADMAP.md)：版本計畫與驗收條件
